@@ -1,6 +1,6 @@
 [package]
 name = "pdf_composer"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 description = "Crate to create PDF documents from YAML Front Matter source documents"
 authors = ["OrangeKiwi", "Richard Locke"]
