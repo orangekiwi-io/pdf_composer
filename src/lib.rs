@@ -5,7 +5,7 @@
 #![crate_name = "pdf_composer"]
 #![crate_type = "lib"]
 
-use std::{fmt, path::PathBuf};
+use std::{collections::BTreeMap, fmt, path::PathBuf};
 
 use colored::Colorize;
 
@@ -16,7 +16,8 @@ pub struct PDFComposer {
     output_directory: PathBuf,
     // pdf_version: Option<String>,
     pdf_version: String,
-    pdf_document_entries: Option<Vec<PDFDocInfoEntry>>,
+    // pdf_document_entries: Option<Vec<PDFDocInfoEntry>>,
+    pdf_document_entries: Option<BTreeMap<String, String>>,
 }
 
 // NOTE: Don't forget to update debug_struct below when updating struct above
@@ -43,10 +44,6 @@ impl fmt::Debug for PDFDocInfoEntry {
             .field("yaml_entry", &self.yaml_entry)
             .finish()
     }
-}
-
-struct PDFDocEntries {
-    dictionary: PDFDocInfoEntry,
 }
 
 impl PDFComposer {
@@ -105,25 +102,19 @@ impl PDFComposer {
     }
 
     pub fn set_doc_info_entry(&mut self, entry: PDFDocInfoEntry) {
-    // pub fn set_doc_info_entry(&mut self, string_one: &str, string_two: &str) {
         let local_doc_info_entry = entry.doc_info_entry;
         let local_yaml_entry = entry.yaml_entry;
 
         match &mut self.pdf_document_entries {
-            Some(vec) => {
+            Some(map) => {
                 // Case where the Option contains Some variant
-                vec.push(PDFDocInfoEntry {
-                    doc_info_entry: local_doc_info_entry.clone(),
-                    yaml_entry: local_yaml_entry.clone(),
-                })
-
+                map.insert(local_doc_info_entry.clone(), local_yaml_entry.clone());
             }
             None => {
                 // Case where the Option contains None variant
-                self.pdf_document_entries = Some(vec![PDFDocInfoEntry {
-                    doc_info_entry: local_doc_info_entry.clone(),
-                    yaml_entry: local_yaml_entry.clone(),
-                }]);
+                let mut new_map = BTreeMap::new();
+                new_map.insert(local_doc_info_entry.clone(), local_yaml_entry.clone());
+                self.pdf_document_entries = Some(new_map);
             }
         }
     }
