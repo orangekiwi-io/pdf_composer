@@ -1,15 +1,12 @@
-// /// The `source_files` module contains functions for working with source files.
-// mod sources_files;
-// pub use sources_files::get_source_front_matter_files;
-
-/// The `generate_pdf` module contains functions for generating PDF files.
-mod generate_pdf;
-pub use generate_pdf::generate_pdf;
-
-/// The `read_file_data` module contains functions for reading files.
-mod read_file_data;
-pub use read_file_data::read_file_data;
-
 /// The `extract_to_end_string` module contains a function to extract everything to the end of the string after selected delimiter.
 mod extract_to_end_string;
-pub use extract_to_end_string::extract_to_end_string;
+pub use self::extract_to_end_string::extract_to_end_string;
+
+mod yaml_mapping_to_btreemap;
+pub use self::yaml_mapping_to_btreemap::yaml_mapping_to_btreemap;
+
+mod read_lines;
+pub use self::read_lines::read_lines;
+
+mod merge_markdown_yaml;
+pub use self::merge_markdown_yaml::merge_markdown_yaml;

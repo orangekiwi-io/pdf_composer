@@ -4,7 +4,7 @@ use lopdf::{Document, Object as LopdfObject, StringFormat};
 use serde_yaml::Value;
 use std::collections::BTreeMap;
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use crate::utils::extract_to_end_string;
 /// Generates a PDF from HTML content using headless Chrome.
@@ -33,6 +33,7 @@ pub fn generate_pdf(
     generated_html: String,
     filename_path: &str,
     yaml_btreemap: BTreeMap<String, Value>,
+    output_directory: PathBuf,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let mut string_values_btreemap: BTreeMap<String, String> = BTreeMap::new();
     for (key, value) in yaml_btreemap {
@@ -50,13 +51,13 @@ pub fn generate_pdf(
     url_escape::encode_query_to_string(generated_html, &mut html);
 
     // TODO RL Allow path to be set by the user, keeping "pdfs" as a fallback/default location
-    let output_directory = "pdfs";
-    fs::create_dir_all(output_directory)?;
+    // let output_directory = "pdfs";
+    fs::create_dir_all(&output_directory)?;
     let extracted_filename = extract_to_end_string(filename_path, '/');
     let mut pdf_file = extracted_filename.unwrap().to_string();
     pdf_file.push_str(".pdf");
 
-    let pdf_file_path = Path::new(output_directory).join(pdf_file);
+    let pdf_file_path = Path::new(&output_directory).join(pdf_file);
 
     // Navigate the tab to the HTML content.
     // In this case, the page is a data stream

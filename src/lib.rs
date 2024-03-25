@@ -9,7 +9,9 @@ use colored::Colorize;
 use std::{collections::BTreeMap, fmt, path::PathBuf};
 
 mod utils;
-use crate::utils::read_file_data;
+
+mod core;
+use core::read_files;
 
 // PDFComposer struct
 // #[derive(Debug)]
@@ -96,13 +98,15 @@ impl PDFComposer {
             .unwrap();
 
         // Now you can use path_string as a regular String variable
-        println!("{}: {}", "Path as String".cyan(), path_string);
+        println!("{}: {}", "Output path as String".cyan(), path_string);
 
         // println!("{}: {:?}", "self.output_directory".bright_green(), self.output_directory);
 
         if self.fmy_source_files.is_empty() {
             panic!("{}", "No source files set".magenta().underline());
         }
+
+        read_files(&self.fmy_source_files, &self.output_directory);
     }
 
     pub fn set_doc_info_entry(&mut self, entry: PDFDocInfoEntry) {
