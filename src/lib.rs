@@ -5,11 +5,16 @@
 #![crate_name = "pdf_composer"]
 #![crate_type = "lib"]
 
+use colored::Colorize;
 use std::{collections::BTreeMap, fmt, path::PathBuf};
 
-use colored::Colorize;
+mod utils;
+
+mod core;
+use core::read_files;
 
 // PDFComposer struct
+// #[derive(Debug)]
 pub struct PDFComposer {
     fmy_source_files: Vec<PathBuf>,
     // output_directory: Option<PathBuf>,
@@ -64,6 +69,7 @@ impl PDFComposer {
     // TODO RL Remove later. Debug dev
     // Method to print all paths in the vector
     pub fn print_paths(&self) {
+        println!("{}", "print_paths".cyan());
         for path in &self.fmy_source_files {
             println!("{:?}", path);
         }
@@ -92,13 +98,15 @@ impl PDFComposer {
             .unwrap();
 
         // Now you can use path_string as a regular String variable
-        println!("{}: {}", "Path as String".cyan(), path_string);
+        println!("{}: {}", "Output path as String".cyan(), path_string);
 
         // println!("{}: {:?}", "self.output_directory".bright_green(), self.output_directory);
 
         if self.fmy_source_files.is_empty() {
             panic!("{}", "No source files set".magenta().underline());
         }
+
+        read_files(&self.fmy_source_files, &self.output_directory);
     }
 
     pub fn set_doc_info_entry(&mut self, entry: PDFDocInfoEntry) {
@@ -126,7 +134,7 @@ impl Default for PDFComposer {
     fn default() -> Self {
         // You can define default values for fields here
         // For demonstration purposes, let's assume all fields are set to default values
-        PDFComposer::new()
+        Self::new()
     }
 }
 
