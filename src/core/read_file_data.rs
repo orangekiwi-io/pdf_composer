@@ -20,7 +20,7 @@ use crate::utils::{merge_markdown_yaml, read_lines, yaml_mapping_to_btreemap};
 /// let files = vec!["./source_files/404.md"];
 /// read_file_data(files);
 /// ```
-pub(crate) fn read_file_data(files: &[PathBuf], output_directory: &Path) {
+pub(crate) fn read_file_data(files: &[PathBuf], output_directory: &Path, pdf_document_entries: Option<BTreeMap<String, String>>) {
     let mut file = 0;
     let mut yaml_delimiter_count = 0;
     let mut yaml_content: String = String::default();
