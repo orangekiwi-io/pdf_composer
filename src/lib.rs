@@ -102,7 +102,8 @@ impl PDFComposer {
     }
 
     pub fn set_doc_info_entry(&mut self, entry: PDFDocInfoEntry) {
-        let local_doc_info_entry = entry.doc_info_entry;
+        // TODO RL Check PDF specs section re capitalised metadata field name
+        let local_doc_info_entry = entry.doc_info_entry[0..1].to_uppercase() + &entry.doc_info_entry[1..];
         let local_yaml_entry = entry.yaml_entry;
 
         match &mut self.pdf_document_entries {
