@@ -6,7 +6,6 @@ use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use crate::utils::extract_to_end_string;
 /// Generates a PDF from HTML content using headless Chrome.
 ///
 /// # Arguments
@@ -22,19 +21,25 @@ use crate::utils::extract_to_end_string;
 /// # Examples
 ///
 /// ```
-/// use your_crate_name::generate_pdf;
+/// use your_crate_name::build_pdf;
 ///
 /// let generated_html = "<html><body><h1>Hello, world!</h1></body></html>".to_string();
 /// let filename = "example";
-/// let result = generate_pdf(generated_html, filename);
+/// let result = build_pdf(generated_html, filename);
 /// assert!(result.is_ok());
 /// ```
-pub fn generate_pdf(
+pub fn build_pdf(
     generated_html: String,
-    filename_path: &str,
+    filename: &str,
     yaml_btreemap: BTreeMap<String, Value>,
     output_directory: PathBuf,
+    dictionary_entries: BTreeMap<String, String>,
+    pdf_version: String,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    println!("{}", "generate_pdf".magenta().underline());
+    println!("{}: {}", "Number of dictionary_entries".cyan(), &dictionary_entries.len());
+    println!("{}: {:#?}", "dictionary_entries".cyan(), &dictionary_entries);
+
     let mut string_values_btreemap: BTreeMap<String, String> = BTreeMap::new();
     for (key, value) in yaml_btreemap {
         if let Value::String(string_value) = value {
@@ -42,6 +47,8 @@ pub fn generate_pdf(
         }
     }
 
+    println!("{}: {}", "filename".bright_green(), &filename);
+    println!("{}:\n{}", "generated_html".cyan(), &generated_html);
     let browser = Browser::default()?; // Start a new headless Chrome browser instance
     let tab = browser.new_tab()?; // Open a new tab
 
@@ -53,8 +60,7 @@ pub fn generate_pdf(
     // TODO RL Allow path to be set by the user, keeping "pdfs" as a fallback/default location
     // let output_directory = "pdfs";
     fs::create_dir_all(&output_directory)?;
-    let extracted_filename = extract_to_end_string(filename_path, '/');
-    let mut pdf_file = extracted_filename.unwrap().to_string();
+    let mut pdf_file = filename.to_string();
     pdf_file.push_str(".pdf");
 
     let pdf_file_path = Path::new(&output_directory).join(pdf_file);
@@ -71,7 +77,7 @@ pub fn generate_pdf(
 
     // Create a new PDF document
     let mut doc: Document = Document::load_mem(&pdf)?;
-    doc.version = "1.7".to_string();
+    doc.version = pdf_version;
 
     #[allow(unused_variables)]
     let mut object_count: i32 = 0;
@@ -124,48 +130,59 @@ pub fn generate_pdf(
                 }
                 // If Creator key was found, add/update various PDF properties/meta-data
                 if creator_found {
+                    // Loop through properties set by user
+                    for entry in &dictionary_entries {
+                        println!("* {}: {}", entry.0.cyan(), entry.1.green());
+
+                        let (_key, value) = populate_dictionary(
+                            entry.1.to_string(),
+                            string_values_btreemap.clone(),
+                        );
+                        dictionary.set(entry.0.as_bytes().to_vec(), value);
+                    }
+
                     // Insert or update Title key
-                    let (key, value) = populate_dictionary(
-                        "Title".to_string(),
-                        string_values_btreemap.clone(),
-                    );
-                    dictionary.set(key, value);
-                    // Insert or update Author key
-                    let (key, value) = populate_dictionary(
-                        "Author".to_string(),
-                        string_values_btreemap.clone(),
-                    );
-                    dictionary.set(key, value);
+                    // let (key, value) = populate_dictionary(
+                    //     "Title".to_string(),
+                    //     string_values_btreemap.clone(),
+                    // );
+                    // dictionary.set(key, value);
+                    // // Insert or update Author key
+                    // let (key, value) = populate_dictionary(
+                    //     "Author".to_string(),
+                    //     string_values_btreemap.clone(),
+                    // );
+                    // dictionary.set(key, value);
                     // Insert or update Subject key
-                    let (key, value) = populate_dictionary(
-                        "Subject".to_string(),
-                        string_values_btreemap.clone(),
-                    );
-                    dictionary.set(key, value);
-                    // Insert or update Keywords key
-                    let (key, value) = populate_dictionary(
-                        "Keywords".to_string(),
-                        string_values_btreemap.clone(),
-                    );
-                    dictionary.set(key, value);
-                    // Insert or update Language key
-                    let (key, value) = populate_dictionary(
-                        "Language".to_string(),
-                        string_values_btreemap.clone(),
-                    );
-                    dictionary.set(key, value);
-                    // Insert or update Permalink key
-                    let (key, value) = populate_dictionary(
-                        "Permalink".to_string(),
-                        string_values_btreemap.clone(),
-                    );
-                    dictionary.set(key, value);
-                    // Insert or update Site_components key
-                    let (key, value) = populate_dictionary(
-                        "Site_components".to_string(),
-                        string_values_btreemap.clone(),
-                    );
-                    dictionary.set(key, value);
+                    // let (key, value) = populate_dictionary(
+                    //     "Subject".to_string(),
+                    //     string_values_btreemap.clone(),
+                    // );
+                    // dictionary.set("Subject".as_bytes().to_vec(), LopdfObject::String("Bob subject".as_bytes().to_vec(), StringFormat::Literal));
+                    // // Insert or update Keywords key
+                    // let (key, value) = populate_dictionary(
+                    //     "Keywords".to_string(),
+                    //     string_values_btreemap.clone(),
+                    // );
+                    // dictionary.set(key, value);
+                    // // Insert or update Language key
+                    // let (key, value) = populate_dictionary(
+                    //     "Language".to_string(),
+                    //     string_values_btreemap.clone(),
+                    // );
+                    // dictionary.set(key, value);
+                    // // Insert or update Permalink key
+                    // let (key, value) = populate_dictionary(
+                    //     "Permalink".to_string(),
+                    //     string_values_btreemap.clone(),
+                    // );
+                    // dictionary.set(key, value);
+                    // // Insert or update Site_components key
+                    // let (key, value) = populate_dictionary(
+                    //     "Site_components".to_string(),
+                    //     string_values_btreemap.clone(),
+                    // );
+                    // dictionary.set(key, value);
                 }
 
                 object_count += 1;
