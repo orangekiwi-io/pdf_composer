@@ -13,7 +13,7 @@ mod utils;
 use utils::{merge_markdown_yaml, read_lines, yaml_mapping_to_btreemap};
 
 mod core;
-use core::generate_pdf;
+use core::build_pdf;
 
 use crate::utils::extract_to_end_string;
 
@@ -172,7 +172,7 @@ impl PDFComposer {
                 "extracted_filename: ".cyan(),
                 extracted_filename.unwrap()
             );
-            let _ = generate_pdf(
+            let _ = build_pdf(
                 html,
                 extracted_filename.unwrap(),
                 yaml_btreemap,

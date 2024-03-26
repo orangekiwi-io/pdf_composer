@@ -6,7 +6,6 @@ use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use crate::utils::extract_to_end_string;
 /// Generates a PDF from HTML content using headless Chrome.
 ///
 /// # Arguments
@@ -22,14 +21,14 @@ use crate::utils::extract_to_end_string;
 /// # Examples
 ///
 /// ```
-/// use your_crate_name::generate_pdf;
+/// use your_crate_name::build_pdf;
 ///
 /// let generated_html = "<html><body><h1>Hello, world!</h1></body></html>".to_string();
 /// let filename = "example";
-/// let result = generate_pdf(generated_html, filename);
+/// let result = build_pdf(generated_html, filename);
 /// assert!(result.is_ok());
 /// ```
-pub fn generate_pdf(
+pub fn build_pdf(
     generated_html: String,
     filename: &str,
     yaml_btreemap: BTreeMap<String, Value>,
@@ -61,7 +60,6 @@ pub fn generate_pdf(
     // TODO RL Allow path to be set by the user, keeping "pdfs" as a fallback/default location
     // let output_directory = "pdfs";
     fs::create_dir_all(&output_directory)?;
-    // let extracted_filename = extract_to_end_string(filename_path, '/');
     let mut pdf_file = filename.to_string();
     pdf_file.push_str(".pdf");
 
