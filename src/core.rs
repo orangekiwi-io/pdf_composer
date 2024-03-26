@@ -6,7 +6,7 @@
 
 /// The `build_pdf` module contains functions for generating PDF files.
 mod build_pdf;
-pub use self::build_pdf::build_pdf;
+pub use build_pdf::build_pdf;
 
 // The `read_file_data` module contains functions for reading files.
 // mod read_file_data;

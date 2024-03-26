@@ -1,4 +1,4 @@
-// Copyright © 2024 PDF OK (pdf_ok). All rights reserved.
+// Copyright © 2024 PDF Composer (pdf_composer). All rights reserved.
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 // Crate configuration
@@ -18,14 +18,10 @@ use core::build_pdf;
 use crate::utils::extract_to_end_string;
 
 // PDFComposer struct
-// #[derive(Debug)]
 pub struct PDFComposer {
     fmy_source_files: Vec<PathBuf>,
-    // output_directory: Option<PathBuf>,
     output_directory: PathBuf,
-    // pdf_version: Option<String>,
     pdf_version: String,
-    // pdf_document_entries: Option<Vec<PDFDocInfoEntry>>,
     pdf_document_entries: Option<BTreeMap<String, String>>,
 }
 
@@ -61,23 +57,11 @@ impl PDFComposer {
         println!("{}\n", "PDF Composer new!".green().underline());
         // Create and return a new instance of PDFComposer. Setting default value, where applicable
         Self {
-            fmy_source_files: Vec::new(), //<PathBuf>,
+            fmy_source_files: Vec::new(),
             output_directory: "pdf_composer_pdfs".into(),
             pdf_version: "1.7".to_string(),
-            // pdf_document_entries: Vec::new(),
-            // pdf_document_entries: Some(Vec::new()),
             pdf_document_entries: None,
         }
-    }
-
-    // TODO RL Remove later. Debug dev
-    // Method to print all paths in the vector
-    pub fn print_paths(&self) {
-        println!("{}", "print_paths".cyan());
-        for path in &self.fmy_source_files {
-            println!("{:?}", path);
-        }
-        println!();
     }
 
     pub fn set_pdf_version(&mut self, pdf_version: &str) {
@@ -95,7 +79,6 @@ impl PDFComposer {
     pub fn generate_pdfs(&self) {
         println!("{}", "generate_pdfs".bright_green());
 
-        // let optional_path = &self.output_directory;
         let path_string: String = <std::path::PathBuf as Clone>::clone(&self.output_directory)
             .into_os_string()
             .into_string()
@@ -104,13 +87,10 @@ impl PDFComposer {
         // Now you can use path_string as a regular String variable
         println!("{}: {}", "Output path as String".cyan(), path_string);
 
-        // println!("{}: {:?}", "self.output_directory".bright_green(), self.output_directory);
-
         if self.fmy_source_files.is_empty() {
             panic!("{}", "No source files set".magenta().underline());
         }
 
-        // read_files(&self.fmy_source_files, &self.output_directory, &self.pdf_document_entries);
         let mut file = 0;
         let mut yaml_delimiter_count = 0;
         let mut yaml_content: String = String::default();
