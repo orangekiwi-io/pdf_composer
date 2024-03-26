@@ -72,7 +72,6 @@ pub fn build_pdf(
 
     // Convert the page to PDF format
     let pdf = tab.print_to_pdf(None)?;
-    // println!("{:?}", String::from_utf8_lossy(&pdf));
 
     // Create a new PDF document
     let mut doc: Document = Document::load_mem(&pdf)?;
@@ -91,15 +90,6 @@ pub fn build_pdf(
                 // Print out the dictionary entries
                 for (key, value) in dictionary.iter_mut() {
                     let ascii_key = String::from_utf8_lossy(key);
-
-                    // Print out all Key/Value pairs
-                    // println!(
-                    //     " {} {} :{} {:#?}",
-                    //     "key".cyan(),
-                    //     ascii_key,
-                    //     "value".yellow(),
-                    //     value
-                    // );
 
                     // Iterate over the key-value pairs in the dictionary
                     // Check if the key is "Creator"
