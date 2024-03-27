@@ -1,4 +1,3 @@
-use colored::Colorize;
 use regex::Regex;
 use serde_yaml::Value;
 use std::collections::BTreeMap;
@@ -7,7 +6,6 @@ pub fn merge_markdown_yaml(
     yaml_btreemap: BTreeMap<String, Value>,
     markdown_content: &str,
 ) -> String {
-    // TODO RL Look into if this could be taken out into a utility function
     let mut new_btreemap: BTreeMap<String, String> = BTreeMap::new();
     for (key, value) in yaml_btreemap {
         if let Value::String(string_value) = value {
@@ -30,12 +28,6 @@ pub fn merge_markdown_yaml(
                 .unwrap_or_default()
         }
     });
-
-    println!(
-        "\n{}{}",
-        "Markdown with replaced YAML values. Ready for PDF processing".bright_green(),
-        replaced_string
-    );
 
     replaced_string.to_string()
 }

@@ -6,6 +6,8 @@ use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
+use crate::utils::extract_to_end_string;
+
 /// Generates a PDF from HTML content using headless Chrome.
 ///
 /// # Arguments
@@ -30,15 +32,18 @@ use std::path::{Path, PathBuf};
 /// ```
 pub fn build_pdf(
     generated_html: String,
-    filename: &str,
+    source_file: String,
+    // filename: &str,
     yaml_btreemap: BTreeMap<String, Value>,
     output_directory: PathBuf,
     dictionary_entries: BTreeMap<String, String>,
     pdf_version: String,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    println!("{}", "generate_pdf".magenta().underline());
-    println!("{}: {}", "Number of dictionary_entries".cyan(), &dictionary_entries.len());
-    println!("{}: {:#?}", "dictionary_entries".cyan(), &dictionary_entries);
+    // println!("{}: {:#?}", "dictionary_entries".cyan(), &dictionary_entries);
+    // Remove the markdown, md, file extension
+    let filename_path = source_file.trim_end_matches(".md");
+    // Extract only the file name
+    let extracted_filename = extract_to_end_string(filename_path, '/');
 
     let mut string_values_btreemap: BTreeMap<String, String> = BTreeMap::new();
     for (key, value) in yaml_btreemap {
@@ -47,8 +52,6 @@ pub fn build_pdf(
         }
     }
 
-    println!("{}: {}", "filename".bright_green(), &filename);
-    println!("{}:\n{}", "generated_html".cyan(), &generated_html);
     let browser = Browser::default()?; // Start a new headless Chrome browser instance
     let tab = browser.new_tab()?; // Open a new tab
 
@@ -57,23 +60,18 @@ pub fn build_pdf(
     // url_escape:: comes from the url_escape crate
     url_escape::encode_query_to_string(generated_html, &mut html);
 
-    // TODO RL Allow path to be set by the user, keeping "pdfs" as a fallback/default location
-    // let output_directory = "pdfs";
     fs::create_dir_all(&output_directory)?;
-    let mut pdf_file = filename.to_string();
+    let mut pdf_file = extracted_filename.unwrap().to_string();
     pdf_file.push_str(".pdf");
 
     let pdf_file_path = Path::new(&output_directory).join(pdf_file);
 
     // Navigate the tab to the HTML content.
     // In this case, the page is a data stream
-    tab.navigate_to(
-        format!("data:text/html;charset=utf-8,{}", html).as_str(),
-    )?;
+    tab.navigate_to(format!("data:text/html;charset=utf-8,{}", html).as_str())?;
 
     // Convert the page to PDF format
     let pdf = tab.print_to_pdf(None)?;
-    // println!("{:?}", String::from_utf8_lossy(&pdf));
 
     // Create a new PDF document
     let mut doc: Document = Document::load_mem(&pdf)?;
@@ -93,46 +91,29 @@ pub fn build_pdf(
                 for (key, value) in dictionary.iter_mut() {
                     let ascii_key = String::from_utf8_lossy(key);
 
-                    // Print out all Key/Value pairs
-                    // println!(
-                    //     " {} {} :{} {:#?}",
-                    //     "key".cyan(),
-                    //     ascii_key,
-                    //     "value".yellow(),
-                    //     value
-                    // );
-
                     // Iterate over the key-value pairs in the dictionary
                     // Check if the key is "Creator"
                     if ascii_key == "Creator" {
                         // Update the value associated with the key
-                        let ascii_string =
-                            string_values_btreemap.get("generator").unwrap();
-                        let ascii_bytes: Vec<u8> =
-                            ascii_string.as_bytes().to_vec();
-                        *value = lopdf::Object::String(
-                            ascii_bytes,
-                            StringFormat::Literal,
-                        );
+                        let ascii_string = string_values_btreemap.get("generator").unwrap();
+                        let ascii_bytes: Vec<u8> = ascii_string.as_bytes().to_vec();
+                        *value = lopdf::Object::String(ascii_bytes, StringFormat::Literal);
                         // Set creator_found to true
                         creator_found = true;
                     }
                     if ascii_key == "Producer" {
                         // Update the value associated with the key
                         let ascii_string = "OrangeKiwi using lopdf";
-                        let ascii_bytes: Vec<u8> =
-                            ascii_string.as_bytes().to_vec();
-                        *value = lopdf::Object::String(
-                            ascii_bytes,
-                            StringFormat::Literal,
-                        );
+                        let ascii_bytes: Vec<u8> = ascii_string.as_bytes().to_vec();
+                        *value = lopdf::Object::String(ascii_bytes, StringFormat::Literal);
                     }
                 }
                 // If Creator key was found, add/update various PDF properties/meta-data
                 if creator_found {
                     // Loop through properties set by user
+                    // println!("{}", "PDF document metadata properties".yellow());
                     for entry in &dictionary_entries {
-                        println!("* {}: {}", entry.0.cyan(), entry.1.green());
+                        // println!("* {}: {}", entry.0.cyan(), entry.1.green());
 
                         let (_key, value) = populate_dictionary(
                             entry.1.to_string(),
@@ -140,49 +121,6 @@ pub fn build_pdf(
                         );
                         dictionary.set(entry.0.as_bytes().to_vec(), value);
                     }
-
-                    // Insert or update Title key
-                    // let (key, value) = populate_dictionary(
-                    //     "Title".to_string(),
-                    //     string_values_btreemap.clone(),
-                    // );
-                    // dictionary.set(key, value);
-                    // // Insert or update Author key
-                    // let (key, value) = populate_dictionary(
-                    //     "Author".to_string(),
-                    //     string_values_btreemap.clone(),
-                    // );
-                    // dictionary.set(key, value);
-                    // Insert or update Subject key
-                    // let (key, value) = populate_dictionary(
-                    //     "Subject".to_string(),
-                    //     string_values_btreemap.clone(),
-                    // );
-                    // dictionary.set("Subject".as_bytes().to_vec(), LopdfObject::String("Bob subject".as_bytes().to_vec(), StringFormat::Literal));
-                    // // Insert or update Keywords key
-                    // let (key, value) = populate_dictionary(
-                    //     "Keywords".to_string(),
-                    //     string_values_btreemap.clone(),
-                    // );
-                    // dictionary.set(key, value);
-                    // // Insert or update Language key
-                    // let (key, value) = populate_dictionary(
-                    //     "Language".to_string(),
-                    //     string_values_btreemap.clone(),
-                    // );
-                    // dictionary.set(key, value);
-                    // // Insert or update Permalink key
-                    // let (key, value) = populate_dictionary(
-                    //     "Permalink".to_string(),
-                    //     string_values_btreemap.clone(),
-                    // );
-                    // dictionary.set(key, value);
-                    // // Insert or update Site_components key
-                    // let (key, value) = populate_dictionary(
-                    //     "Site_components".to_string(),
-                    //     string_values_btreemap.clone(),
-                    // );
-                    // dictionary.set(key, value);
                 }
 
                 object_count += 1;
@@ -197,8 +135,27 @@ pub fn build_pdf(
         }
     }
 
-    doc.save(pdf_file_path)
-        .expect("Failed to save modified PDF document");
+    let check_mark = '\u{2713}';
+    let cross_mark = '\u{2717}';
+    let mut error_message = cross_mark.to_string().red().to_string();
+    error_message.push_str(" Failed to save modified PDF document".red().to_string().as_str());
+    doc.save(pdf_file_path.clone())
+        .expect(error_message.as_str());
+
+    println!(
+        "\n{} {} → {}",
+        check_mark,
+        source_file.bright_green(),
+        pdf_file_path
+            .into_os_string()
+            .into_string()
+            .unwrap()
+            .yellow()
+    );
+    println!("\n{}", "PDF document metadata properties".yellow());
+    for entry in &dictionary_entries {
+        println!("* {}: {}", entry.0.cyan(), entry.1.green());
+    }
 
     Ok(())
 }
@@ -207,15 +164,18 @@ fn populate_dictionary(
     yaml_entry: String,
     string_values_btreemap: BTreeMap<String, String>,
 ) -> (Vec<u8>, LopdfObject) {
-    println!("{}: {}", "Populate PDF dictionary key".yellow(), yaml_entry.cyan());
-    let yaml_entry: String = match yaml_entry.as_str() {
-        "Subject" => "Description".to_string(),
-        _ => yaml_entry
-    };
+    // let yaml_entry: String = match yaml_entry.as_str() {
+    //     "Subject" => "Description".to_string(),
+    //     _ => yaml_entry,
+    // };
     let key = yaml_entry.as_bytes().to_vec();
-    let value_string =
-        string_values_btreemap.get(&yaml_entry.to_lowercase()).unwrap();
+    let value_string = string_values_btreemap
+        .get(&yaml_entry.to_lowercase())
+        .unwrap();
     let value_as_bytes: Vec<u8> = value_string.as_bytes().to_vec();
 
-    (key, LopdfObject::String(value_as_bytes, StringFormat::Literal))
+    (
+        key,
+        LopdfObject::String(value_as_bytes, StringFormat::Literal),
+    )
 }

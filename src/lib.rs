@@ -15,8 +15,6 @@ use utils::{merge_markdown_yaml, read_lines, yaml_mapping_to_btreemap};
 mod core;
 use core::build_pdf;
 
-use crate::utils::extract_to_end_string;
-
 // PDFComposer struct
 pub struct PDFComposer {
     fmy_source_files: Vec<PathBuf>,
@@ -54,8 +52,8 @@ impl fmt::Debug for PDFDocInfoEntry {
 impl PDFComposer {
     /// Constructor function to create a new instance of PDFComposer
     pub fn new() -> Self {
-        println!("{}\n", "PDF Composer new!".green().underline());
-        // Create and return a new instance of PDFComposer. Setting default value, where applicable
+        // Create and return a new instance of PDFComposer.
+        // Setting default values, where applicable.
         Self {
             fmy_source_files: Vec::new(),
             output_directory: "pdf_composer_pdfs".into(),
@@ -77,16 +75,7 @@ impl PDFComposer {
     }
 
     pub fn generate_pdfs(&self) {
-        println!("{}", "generate_pdfs".bright_green());
-
-        let path_string: String = <std::path::PathBuf as Clone>::clone(&self.output_directory)
-            .into_os_string()
-            .into_string()
-            .unwrap();
-
-        // Now you can use path_string as a regular String variable
-        println!("{}: {}", "Output path as String".cyan(), path_string);
-
+        // TODO RL Find a nicer, more rusty, way to do early exits
         if self.fmy_source_files.is_empty() {
             panic!("{}", "No source files set".magenta().underline());
         }
@@ -95,8 +84,12 @@ impl PDFComposer {
         let mut yaml_delimiter_count = 0;
         let mut yaml_content: String = String::default();
         let mut markdown_content: String = String::default();
-        println!("Files to process: {}", &self.fmy_source_files.len());
-        println!("{:#?}", &self.fmy_source_files);
+        println!(
+            "{} {}",
+            "Files to process:".cyan(),
+            &self.fmy_source_files.len()
+        );
+        println!("{} {:#?}", "Files:".cyan(), &self.fmy_source_files);
 
         while file < self.fmy_source_files.len() {
             let filename = &<std::path::PathBuf as Clone>::clone(&self.fmy_source_files[file])
@@ -106,7 +99,7 @@ impl PDFComposer {
 
             // TODO RL Early return/panic/exit if this condition not met
             if let Ok(lines) = read_lines(filename) {
-                println!("\n{} {}", "filename:".cyan(), filename.bright_green());
+                // println!("\n{} {}", "filename:".cyan(), filename.bright_green());
                 // Consumes the iterator, returns an (Optional) String
                 for line in lines.map_while(Result::ok) {
                     if line.trim() == "---" {
@@ -139,25 +132,23 @@ impl PDFComposer {
             // Convert Markdown content to HTML
             // markdown:: comes from the markdown crate
             let html: String = markdown::to_html(&merged_markdown_yaml.to_owned());
-            println!("{}\n{:#?}", "HTML".cyan(), html);
 
-            // Remove the markdown, md, file extension
-            // TODO RL Just extract the file name, no path
-            let filename_path = filename.trim_end_matches(".md");
-            let extracted_filename = extract_to_end_string(filename_path, '/');
+            // // Remove the markdown, md, file extension
+            // let filename_path = filename.trim_end_matches(".md");
+            // // Extract only the file name
+            // let extracted_filename = extract_to_end_string(filename_path, '/');
 
-            println!("{} {}", "filename_path: ".cyan(), filename_path);
-            println!(
-                "{} {}",
-                "extracted_filename: ".cyan(),
-                extracted_filename.unwrap()
-            );
+            // Build PDF
             let _ = build_pdf(
                 html,
-                extracted_filename.unwrap(),
+                filename.to_string(),
+                // extracted_filename.unwrap(),
                 yaml_btreemap,
                 self.output_directory.to_path_buf(),
-                <std::option::Option<std::collections::BTreeMap<std::string::String, std::string::String>> as Clone>::clone(&self.pdf_document_entries).unwrap(),
+                <std::option::Option<
+                    std::collections::BTreeMap<std::string::String, std::string::String>,
+                > as Clone>::clone(&self.pdf_document_entries)
+                .unwrap(),
                 self.pdf_version.clone(),
             );
 
