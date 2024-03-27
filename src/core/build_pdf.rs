@@ -1,5 +1,5 @@
 use colored::Colorize;
-use headless_chrome::Browser;
+use headless_chrome::{Browser, LaunchOptions};
 use lopdf::{Document, Object as LopdfObject, StringFormat};
 use serde_yaml::Value;
 use std::collections::BTreeMap;
@@ -52,7 +52,7 @@ pub fn build_pdf(
         }
     }
 
-    let browser = Browser::default()?; // Start a new headless Chrome browser instance
+    let browser = Browser::new(LaunchOptions::default())?; // Start a new headless Chrome browser instance
     let tab = browser.new_tab()?; // Open a new tab
 
     let mut html = String::new();
@@ -103,7 +103,7 @@ pub fn build_pdf(
                     }
                     if ascii_key == "Producer" {
                         // Update the value associated with the key
-                        let ascii_string = "OrangeKiwi using lopdf";
+                        let ascii_string = "OrangeKiwi using headless Chrome and lopdf";
                         let ascii_bytes: Vec<u8> = ascii_string.as_bytes().to_vec();
                         *value = lopdf::Object::String(ascii_bytes, StringFormat::Literal);
                     }
@@ -138,7 +138,12 @@ pub fn build_pdf(
     let check_mark = '\u{2713}';
     let cross_mark = '\u{2717}';
     let mut error_message = cross_mark.to_string().red().to_string();
-    error_message.push_str(" Failed to save modified PDF document".red().to_string().as_str());
+    error_message.push_str(
+        " Failed to save modified PDF document"
+            .red()
+            .to_string()
+            .as_str(),
+    );
     doc.save(pdf_file_path.clone())
         .expect(error_message.as_str());
 
@@ -152,7 +157,7 @@ pub fn build_pdf(
             .unwrap()
             .yellow()
     );
-    println!("\n{}", "PDF document metadata properties".yellow());
+    println!("{}", "PDF document metadata properties".yellow());
     for entry in &dictionary_entries {
         println!("* {}: {}", entry.0.cyan(), entry.1.green());
     }
