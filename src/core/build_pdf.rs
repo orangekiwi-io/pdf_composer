@@ -116,7 +116,7 @@ pub fn build_pdf(
                         }
                         if ascii_key == "Producer" {
                             // Update the value associated with the key
-                            let ascii_string = "OrangeKiwi using headless Chrome and lopdf";
+                            let ascii_string = "OrangeKiwi using Chromiumoxide and lopdf";
                             let ascii_bytes: Vec<u8> = ascii_string.as_bytes().to_vec();
                             *value = lopdf::Object::String(ascii_bytes, StringFormat::Literal);
                         }
