@@ -81,91 +81,19 @@ impl PDFComposer {
             panic!("{}", "No source files set".magenta().underline());
         }
 
-        let mut file = 0;
-        let mut yaml_delimiter_count = 0;
-        let mut yaml_content: String = String::default();
-        let mut markdown_content: String = String::default();
+        println!("{} {:#?}", "Files:".cyan(), &self.fmy_source_files);
         println!(
             "{} {}",
             "Files to process:".cyan(),
             &self.fmy_source_files.len()
         );
-        println!("{} {:#?}", "Files:".cyan(), &self.fmy_source_files);
-
-        // while file < self.fmy_source_files.len() {
-        //     let filename = &<std::path::PathBuf as Clone>::clone(&self.fmy_source_files[file])
-        //         .into_os_string()
-        //         .into_string()
-        //         .unwrap();
-
-        //     // TODO RL Early return/panic/exit if this condition not met
-        //     if let Ok(lines) = read_lines(filename) {
-        //         // println!("\n{} {}", "filename:".cyan(), filename.bright_green());
-        //         // Consumes the iterator, returns an (Optional) String
-        //         for line in lines.map_while(Result::ok) {
-        //             if line.trim() == "---" {
-        //                 yaml_delimiter_count += 1;
-        //             }
-
-        //             if yaml_delimiter_count == 1 && line.trim() != "---" && yaml_delimiter_count < 2
-        //             {
-        //                 yaml_content.push_str(&format!("{}{}", &line, "\n"));
-        //             }
-
-        //             if yaml_delimiter_count == 2 && line.trim() != "---" {
-        //                 markdown_content.push_str(&format!("{}{}", &line, "\n"));
-        //             }
-        //         }
-        //     }
-        //     yaml_delimiter_count = 0;
-
-        //     let yaml: Value = serde_yaml::from_str(&yaml_content).unwrap();
-        //     // println!("yaml Value {:#?}", yaml);
-        //     // Convert Front Matter YAML to a BTreeMap
-        //     let yaml_btreemap: BTreeMap<String, Value> = yaml_mapping_to_btreemap(&yaml).unwrap();
-        //     // println!("{}\n{:#?}", "yaml_btreemap".yellow(), yaml_btreemap);
-
-        //     // Insert Font Matter YAML into markdown (if applicable)
-        //     // TODO RL Add some sort of boolean check
-        //     let merged_markdown_yaml =
-        //         merge_markdown_yaml(yaml_btreemap.clone(), &markdown_content);
-
-        //     // Convert Markdown content to HTML
-        //     // markdown:: comes from the markdown crate
-        //     let html: String = markdown::to_html(&merged_markdown_yaml.to_owned());
-
-        //     // // Remove the markdown, md, file extension
-        //     // let filename_path = filename.trim_end_matches(".md");
-        //     // // Extract only the file name
-        //     // let extracted_filename = extract_to_end_string(filename_path, '/');
-
-        //     // Build PDF
-        //     let _ = build_pdf(
-        //         html,
-        //         filename.to_string(),
-        //         // extracted_filename.unwrap(),
-        //         yaml_btreemap,
-        //         self.output_directory.to_path_buf(),
-        //         <std::option::Option<
-        //             std::collections::BTreeMap<std::string::String, std::string::String>,
-        //         > as Clone>::clone(&self.pdf_document_entries)
-        //         .unwrap(),
-        //         self.pdf_version.clone(),
-        //     );
-
-        //     file += 1;
-        //     // Reset yaml and markdown content ready for the next file
-        //     yaml_content = String::default();
-        //     markdown_content = String::default();
-        // }
 
         self.fmy_source_files.par_iter().for_each(|document| {
-            let mut rayon_file = 0;
             let mut rayon_yaml_delimiter_count = 0;
             let mut rayon_yaml_content: String = String::default();
             let mut rayon_markdown_content: String = String::default();
 
-            let filename = <std::path::PathBuf as Clone>::clone(&document)
+            let filename = <std::path::PathBuf as Clone>::clone(document)
                 .into_os_string()
                 .into_string()
                 .unwrap();
@@ -191,7 +119,7 @@ impl PDFComposer {
                 }
             }
             // println!("\n{} {}", "filename:".cyan(), &filename.bright_green());
-            rayon_yaml_delimiter_count = 0;
+            // rayon_yaml_delimiter_count = 0;
 
             let yaml: Value = serde_yaml::from_str(&rayon_yaml_content).unwrap();
             // println!("{}\n{:#?}", "yaml Value".cyan(), yaml);
@@ -234,10 +162,9 @@ impl PDFComposer {
                 self.pdf_version.clone(),
             );
 
-            rayon_file += 1;
             // Reset yaml and markdown content ready for the next file
-            rayon_yaml_content = String::default();
-            rayon_markdown_content = String::default();
+            // rayon_yaml_content = String::default();
+            // rayon_markdown_content = String::default();
         });
     }
 
