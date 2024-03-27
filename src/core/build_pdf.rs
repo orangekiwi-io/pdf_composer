@@ -49,7 +49,7 @@ pub fn build_pdf(
         let extracted_filename = extract_to_end_string(filename_path, '/');
 
         let mut string_values_btreemap: BTreeMap<String, String> = BTreeMap::new();
-        for (key, value) in yaml_btreemap {
+        for (key, value) in yaml_btreemap.clone() {
             if let Value::String(string_value) = value {
                 string_values_btreemap.insert(key, string_value);
             }
@@ -62,8 +62,10 @@ pub fn build_pdf(
             }
         });
 
-        // let html_string = "<html><head><title>My Title</title><head><body><p>Body p</p></body></html>";
+        let title_string = yaml_btreemap.get("title").unwrap().as_str().unwrap();
         let mut html_string = String::new();
+        let html_before_string = format!("<html><head><title>{}</title><head><body>", title_string);
+        let html_after_string = "</body></html>";
         // Encode the HTML content to URL-safe format
         // url_escape:: comes from the url_escape crate
         url_escape::encode_query_to_string(generated_html, &mut html_string);
@@ -77,11 +79,10 @@ pub fn build_pdf(
         // Navigate the tab to the HTML content.
         // In this case, the page is a data stream
         let page = browser
-            .new_page(format!("data:text/html;charset=utf-8,{}", html_string).as_str())
+            .new_page(format!("data:text/html;charset=utf-8,{}{}{}", html_before_string, html_string, html_after_string).as_str())
             .await?;
         let _html = page.wait_for_navigation().await?.content().await?;
-        // save the page as pdf
-        // page.save_pdf(PrintToPdfParams::default(), "ok.pdf").await?;
+
         // Convert the page to PDF format
         let pdf = page.pdf(PrintToPdfParams::default()).await?;
 
