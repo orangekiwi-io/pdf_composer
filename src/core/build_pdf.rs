@@ -2,7 +2,8 @@ use colored::Colorize;
 use lopdf::{Document, Object as LopdfObject, StringFormat};
 use serde_yaml::Value;
 use std::collections::BTreeMap;
-use std::fs;
+use std::fs::{create_dir_all, OpenOptions};
+use std::io;
 use std::path::{Path, PathBuf};
 
 use crate::utils::extract_to_end_string;
@@ -70,16 +71,27 @@ pub fn build_pdf(
         // url_escape:: comes from the url_escape crate
         url_escape::encode_query_to_string(generated_html, &mut html_string);
 
-        fs::create_dir_all(&output_directory)?;
+        create_dir_all(&output_directory)?;
         let mut pdf_file = extracted_filename.unwrap().to_string();
         pdf_file.push_str(".pdf");
 
         let pdf_file_path = Path::new(&output_directory).join(pdf_file);
+        let pdf_file_path_as_string = pdf_file_path
+            .clone()
+            .into_os_string()
+            .into_string()
+            .unwrap();
 
         // Navigate the tab to the HTML content.
         // In this case, the page is a data stream
         let page = browser
-            .new_page(format!("data:text/html;charset=utf-8,{}{}{}", html_before_string, html_string, html_after_string).as_str())
+            .new_page(
+                format!(
+                    "data:text/html;charset=utf-8,{}{}{}",
+                    html_before_string, html_string, html_after_string
+                )
+                .as_str(),
+            )
             .await?;
         let _html = page.wait_for_navigation().await?.content().await?;
 
@@ -108,7 +120,10 @@ pub fn build_pdf(
                         // Check if the key is "Creator"
                         if ascii_key == "Creator" {
                             // Update the value associated with the key
-                            let ascii_string = string_values_btreemap.get("generator").unwrap();
+                            let default_creator = "PDFComposer".to_string();
+                            let ascii_string = string_values_btreemap
+                                .get("generator")
+                                .unwrap_or(&default_creator);
                             let ascii_bytes: Vec<u8> = ascii_string.as_bytes().to_vec();
                             *value = lopdf::Object::String(ascii_bytes, StringFormat::Literal);
                             // Set creator_found to true
@@ -126,7 +141,7 @@ pub fn build_pdf(
                         // Loop through properties set by user
                         // println!("{}", "PDF document metadata properties".yellow());
                         for entry in &dictionary_entries {
-                            // println!("* {}: {}", entry.0.cyan(), entry.1.green());
+                            // println!("----------> {}: {}", entry.0.cyan(), entry.1.green());
 
                             let (_key, value) = populate_dictionary(
                                 entry.1.to_string(),
@@ -148,31 +163,36 @@ pub fn build_pdf(
             }
         }
 
-        let check_mark = '\u{2713}';
-        let cross_mark = '\u{2717}';
-        let mut error_message = cross_mark.to_string().red().to_string();
+        let check_mark = "\u{2713} ";
+        let cross_mark = "\u{2717} ";
+        let mut error_message = "\n".to_owned()
+            + &cross_mark.on_red().to_string()
+            + &pdf_file_path_as_string.on_red().to_string()
+            + "\n";
         error_message.push_str(
-            " Failed to save modified PDF document"
+            "Failed to save modified PDF document."
                 .red()
                 .to_string()
                 .as_str(),
         );
-        doc.save(pdf_file_path.clone())
-            .expect(error_message.as_str());
 
-        println!(
-            "\n{} {} → {}",
-            check_mark,
-            source_file.bright_green(),
-            pdf_file_path
-                .into_os_string()
-                .into_string()
-                .unwrap()
-                .yellow()
-        );
-        println!("{}", "PDF document metadata properties".yellow());
-        for entry in &dictionary_entries {
-            println!("* {}: {}", entry.0.cyan(), entry.1.green());
+        match is_file_open(&pdf_file_path_as_string) {
+            Ok(true) => println!("{} is open by another process.", &pdf_file_path_as_string),
+            Ok(false) => {
+                doc.save(pdf_file_path.clone()).unwrap();
+
+                println!(
+                    "\n{}{} → {}",
+                    check_mark.to_string().green(),
+                    source_file.bright_green(),
+                    pdf_file_path_as_string.yellow()
+                );
+                println!("{}", "PDF document metadata properties".yellow());
+                for entry in &dictionary_entries {
+                    println!("* {}: {}", entry.0.cyan(), entry.1.green());
+                }
+            }
+            Err(error) => println!("{} {}", error_message, error),
         }
 
         Ok(())
@@ -188,6 +208,7 @@ fn populate_dictionary(
     //     _ => yaml_entry,
     // };
     let key = yaml_entry.as_bytes().to_vec();
+    // println!("populate_dictionary:\n{:#?}", key);
     let value_string = string_values_btreemap
         .get(&yaml_entry.to_lowercase())
         .unwrap();
@@ -197,4 +218,22 @@ fn populate_dictionary(
         key,
         LopdfObject::String(value_as_bytes, StringFormat::Literal),
     )
+}
+
+fn is_file_open(file_path: &str) -> Result<bool, io::Error> {
+    match OpenOptions::new().write(true).open(file_path) {
+        Ok(_) => {
+            // The file was successfully opened, which means it's not exclusively locked by another process
+            Ok(false)
+        }
+        Err(error) => {
+            match error.kind() {
+                io::ErrorKind::PermissionDenied => {
+                    // The file is exclusively locked by another process
+                    Ok(true)
+                }
+                _ => Err(error),
+            }
+        }
+    }
 }

@@ -8,7 +8,7 @@
 use colored::Colorize;
 use rayon::prelude::*;
 use serde_yaml::Value;
-use std::{collections::BTreeMap, fmt, path::PathBuf};
+use std::{collections::BTreeMap, fmt, fs, path::PathBuf};
 
 mod utils;
 use utils::{merge_markdown_yaml, read_lines, yaml_mapping_to_btreemap};
@@ -81,97 +81,120 @@ impl PDFComposer {
             panic!("{}", "No source files set".magenta().underline());
         }
 
+        let number_of_files = &self.fmy_source_files.len();
+
         println!("{} {:#?}", "Files:".cyan(), &self.fmy_source_files);
-        println!(
-            "{} {}",
-            "Files to process:".cyan(),
-            &self.fmy_source_files.len()
-        );
+        println!("Files to process: {}\n", number_of_files.to_string().cyan());
 
-        self.fmy_source_files.par_iter().for_each(|document| {
-            let mut rayon_yaml_delimiter_count = 0;
-            let mut rayon_yaml_content: String = String::default();
-            let mut rayon_markdown_content: String = String::default();
+        self.fmy_source_files
+            .par_iter()
+            .for_each(|document| {
+                let mut rayon_yaml_delimiter_count = 0;
+                let mut rayon_yaml_content: String = String::default();
+                let mut rayon_markdown_content: String = String::default();
 
-            let filename = <std::path::PathBuf as Clone>::clone(document)
-                .into_os_string()
-                .into_string()
-                .unwrap();
+                let filename = <std::path::PathBuf as Clone>::clone(document)
+                    .into_os_string()
+                    .into_string()
+                    .unwrap();
 
-            // TODO RL Early return/panic/exit if this condition not met
-            if let Ok(lines) = read_lines(&filename) {
-                // Consumes the iterator, returns an (Optional) String
-                for line in lines.map_while(Result::ok) {
-                    if line.trim() == "---" {
-                        rayon_yaml_delimiter_count += 1;
+                match fs::metadata(filename.clone()) {
+                    Ok(_) => 'file_found: {
+                        println!(
+                            "File {} exists. {}",
+                            filename.bright_cyan(),
+                            "Reading...".bright_green()
+                        );
+                        if let Ok(lines) = read_lines(&filename) {
+                            // Consumes the iterator, returns an (Optional) String
+                            for line in lines.map_while(Result::ok) {
+                                if line.trim() == "---" {
+                                    rayon_yaml_delimiter_count += 1;
+                                }
+
+                                if rayon_yaml_delimiter_count == 1
+                                    && line.trim() != "---"
+                                    && rayon_yaml_delimiter_count < 2
+                                {
+                                    rayon_yaml_content.push_str(&format!("{}{}", &line, "\n"));
+                                }
+
+                                if rayon_yaml_delimiter_count == 2 && line.trim() != "---" {
+                                    rayon_markdown_content.push_str(&format!("{}{}", &line, "\n"));
+                                }
+                            }
+                        }
+
+                        let yaml: Value = serde_yaml::from_str(&rayon_yaml_content).unwrap();
+                        // println!("{}\n{:#?}", "yaml Value".cyan(), yaml);
+
+                        // if file exists, but is not a suitable yaml markdown file, early exit break
+                        if yaml == Value::Null {
+                            println!("File {} is not a valid yaml file", filename.bright_magenta());
+                            break 'file_found;
+                        } else {
+                            println!(
+                                "{}. {}",
+                                filename.bright_cyan(),
+                                "Processing...".bright_green()
+                            );
+                        }
+
+                        // // Convert Front Matter YAML to a BTreeMap
+                        let yaml_btreemap: BTreeMap<String, Value> =
+                            yaml_mapping_to_btreemap(&yaml).unwrap();
+                        // println!("{}\n{:#?}", "yaml_btreemap".yellow(), yaml_btreemap);
+
+                        // Insert Font Matter YAML into markdown (if applicable)
+                        // TODO RL Add some sort of boolean check
+                        let merged_markdown_yaml =
+                            merge_markdown_yaml(yaml_btreemap.clone(), &rayon_markdown_content);
+
+                        // Convert Markdown content to HTML
+                        // markdown:: comes from the markdown crate
+                        let html: String = markdown::to_html(&merged_markdown_yaml.to_owned());
+
+                        // // Build PDF
+                        let _ = build_pdf(
+                            html,
+                            filename.to_string(),
+                            // extracted_filename.unwrap(),
+                            yaml_btreemap,
+                            self.output_directory.to_path_buf(),
+                            <std::option::Option<
+                                std::collections::BTreeMap<
+                                    std::string::String,
+                                    std::string::String,
+                                >,
+                            > as Clone>::clone(
+                                &self.pdf_document_entries
+                            )
+                            .unwrap(),
+                            self.pdf_version.clone(),
+                        );
+
+                        // Reset yaml and markdown content ready for the next file
+                        // rayon_yaml_content = String::default();
+                        // rayon_markdown_content = String::default();
                     }
-
-                    if rayon_yaml_delimiter_count == 1
-                        && line.trim() != "---"
-                        && rayon_yaml_delimiter_count < 2
-                    {
-                        rayon_yaml_content.push_str(&format!("{}{}", &line, "\n"));
-                    }
-
-                    if rayon_yaml_delimiter_count == 2 && line.trim() != "---" {
-                        rayon_markdown_content.push_str(&format!("{}{}", &line, "\n"));
+                    Err(_) => {
+                        println!("File {} not found.", filename.bright_magenta());
                     }
                 }
-            }
-            // println!("\n{} {}", "filename:".cyan(), &filename.bright_green());
-            // rayon_yaml_delimiter_count = 0;
-
-            let yaml: Value = serde_yaml::from_str(&rayon_yaml_content).unwrap();
-            // println!("{}\n{:#?}", "yaml Value".cyan(), yaml);
-            // // Convert Front Matter YAML to a BTreeMap
-            let yaml_btreemap: BTreeMap<String, Value> = yaml_mapping_to_btreemap(&yaml).unwrap();
-            // println!("{}\n{:#?}", "yaml_btreemap".yellow(), yaml_btreemap);
-
-            // Insert Font Matter YAML into markdown (if applicable)
-            // TODO RL Add some sort of boolean check
-            let merged_markdown_yaml =
-                merge_markdown_yaml(yaml_btreemap.clone(), &rayon_markdown_content);
-
-            // Convert Markdown content to HTML
-            // markdown:: comes from the markdown crate
-            let html: String = markdown::to_html(&merged_markdown_yaml.to_owned());
-            // println!(
-            //     "{} for {} {} \n{:#?}",
-            //     "HTML".cyan(),
-            //     "filename:".cyan(),
-            //     &filename.bright_green(),
-            //     html
-            // );
-
-            // Remove the markdown, md, file extension
-            // let filename_path = filename.trim_end_matches(".md");
-            // Extract only the file name
-            // let extracted_filename = extract_to_end_string(filename_path, '/');
-
-            // // Build PDF
-            let _ = build_pdf(
-                html,
-                filename.to_string(),
-                // extracted_filename.unwrap(),
-                yaml_btreemap,
-                self.output_directory.to_path_buf(),
-                <std::option::Option<
-                    std::collections::BTreeMap<std::string::String, std::string::String>,
-                > as Clone>::clone(&self.pdf_document_entries)
-                .unwrap(),
-                self.pdf_version.clone(),
-            );
-
-            // Reset yaml and markdown content ready for the next file
-            // rayon_yaml_content = String::default();
-            // rayon_markdown_content = String::default();
-        });
+            });
     }
 
     pub fn set_doc_info_entry(&mut self, entry: PDFDocInfoEntry) {
-        // TODO RL Check PDF specs section re capitalised metadata field name
-        let local_doc_info_entry =
-            entry.doc_info_entry[0..1].to_uppercase() + &entry.doc_info_entry[1..];
+        // Reserved metadata entries in the document information dictionary
+        // These are case sensitive and must be capitalised.
+        // All others will be as entered by the user.
+        let local_doc_info_entry: String = match entry.doc_info_entry.to_lowercase().as_str() {
+            "title" => "Title".to_string(),
+            "author" => "Author".to_string(),
+            "subject" => "Subject".to_string(),
+            "keywords" => "Keywords".to_string(),
+            _ => entry.doc_info_entry.to_string()
+        };
         let local_yaml_entry = entry.yaml_entry;
 
         match &mut self.pdf_document_entries {
