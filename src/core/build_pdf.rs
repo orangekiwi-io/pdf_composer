@@ -7,6 +7,7 @@ use std::io;
 use std::path::{Path, PathBuf};
 
 use crate::utils::extract_to_end_string;
+use crate::PDFVersion;
 use async_std::task;
 use chromiumoxide::{cdp::browser_protocol::page::PrintToPdfParams, Browser, BrowserConfig};
 use futures::StreamExt;
@@ -42,7 +43,7 @@ pub fn build_pdf(
     yaml_btreemap: BTreeMap<String, Value>,
     output_directory: PathBuf,
     dictionary_entries: BTreeMap<String, String>,
-    pdf_version: String,
+    pdf_version: PDFVersion,
 ) -> Result<(), Box<dyn std::error::Error>> {
     task::block_on(async {
         // println!("{}: {:#?}", "dictionary_entries".cyan(), &dictionary_entries);
@@ -103,7 +104,7 @@ pub fn build_pdf(
 
         // Create a new PDF document
         let mut doc: Document = Document::load_mem(&pdf)?;
-        doc.version = pdf_version;
+        doc.version = pdf_version.to_string();
         doc.save(pdf_file_path.clone()).unwrap();
 
         #[allow(unused_variables)]
