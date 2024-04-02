@@ -50,6 +50,7 @@ pub fn build_pdf(
         let filename_path = source_file.trim_end_matches(".md");
         // Extract only the file name
         let extracted_filename = extract_to_end_string(filename_path, '/');
+        let extracted_filename_as_string = extracted_filename.unwrap().to_string();
 
         let mut string_values_btreemap: BTreeMap<String, String> = BTreeMap::new();
         for (key, value) in yaml_btreemap.clone() {
@@ -65,7 +66,7 @@ pub fn build_pdf(
             }
         });
 
-        let title_string = yaml_btreemap.get("title").unwrap().as_str().unwrap();
+        let title_string = yaml_btreemap.get("title").and_then(|value| value.as_str()).unwrap_or(&extracted_filename_as_string);
         let mut html_string = String::new();
         let html_before_string = format!("<html><head><title>{}</title><head><body>", title_string);
         let html_after_string = "</body></html>";
@@ -74,7 +75,7 @@ pub fn build_pdf(
         url_escape::encode_query_to_string(generated_html, &mut html_string);
 
         create_dir_all(&output_directory)?;
-        let mut pdf_file = extracted_filename.unwrap().to_string();
+        let mut pdf_file = extracted_filename_as_string;
         pdf_file.push_str(".pdf");
 
         let pdf_file_path = Path::new(&output_directory).join(pdf_file);
@@ -103,6 +104,7 @@ pub fn build_pdf(
         // Create a new PDF document
         let mut doc: Document = Document::load_mem(&pdf)?;
         doc.version = pdf_version;
+        doc.save(pdf_file_path.clone()).unwrap();
 
         #[allow(unused_variables)]
         let mut object_count: i32 = 0;
@@ -174,7 +176,7 @@ pub fn build_pdf(
             + "\n";
         error_message.push_str(
             "Failed to save modified PDF document."
-                .red()
+                .bright_red()
                 .to_string()
                 .as_str(),
         );
