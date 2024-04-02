@@ -20,7 +20,7 @@ use core::build_pdf;
 pub struct PDFComposer {
     fmy_source_files: Vec<PathBuf>,
     output_directory: PathBuf,
-    pdf_version: String,
+    pdf_version: PDFVersion,
     pdf_document_entries: Option<BTreeMap<String, String>>,
 }
 
@@ -33,6 +33,21 @@ impl fmt::Debug for PDFComposer {
             .field("pdf_version", &self.pdf_version)
             .field("pdf_document_entries", &self.pdf_document_entries)
             .finish()
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
+pub enum PDFVersion {
+    V1_7,
+    V2_0
+}
+
+impl ToString for PDFVersion {
+    fn to_string(&self) -> String {
+        match self {
+          PDFVersion::V1_7 => String::from("1.7"),
+          PDFVersion::V2_0 => String::from("2.0"),
+        }
     }
 }
 
@@ -58,13 +73,13 @@ impl PDFComposer {
         Self {
             fmy_source_files: Vec::new(),
             output_directory: "pdf_composer_pdfs".into(),
-            pdf_version: "1.7".to_string(),
+            pdf_version: PDFVersion::V1_7,
             pdf_document_entries: None,
         }
     }
 
-    pub fn set_pdf_version(&mut self, pdf_version: &str) {
-        self.pdf_version = pdf_version.to_owned();
+    pub fn set_pdf_version(&mut self, pdf_version: PDFVersion) {
+        self.pdf_version = pdf_version;
     }
 
     pub fn set_output_directory(&mut self, output_directory: &str) {
@@ -170,7 +185,7 @@ impl PDFComposer {
                                 &self.pdf_document_entries
                             )
                             .unwrap(),
-                            self.pdf_version.clone(),
+                            self.pdf_version,
                         );
 
                         // Reset yaml and markdown content ready for the next file
