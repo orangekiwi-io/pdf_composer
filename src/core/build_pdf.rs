@@ -11,6 +11,8 @@ use async_std::task;
 use chromiumoxide::{cdp::browser_protocol::page::PrintToPdfParams, Browser, BrowserConfig};
 use futures::StreamExt;
 
+const CHECK_MARK: &str = "\u{2713} ";
+const CROSS_MARK: &str = "\u{2717} ";
 /// Generates a PDF from HTML content using headless Chrome.
 ///
 /// # Arguments
@@ -136,18 +138,21 @@ pub fn build_pdf(
                             *value = lopdf::Object::String(ascii_bytes, StringFormat::Literal);
                         }
                     }
-                    // If Creator key was found, add/update various PDF properties/meta-data
+                    // If Creator key was found, add/update various PDF properties/metadata
                     if creator_found {
                         // Loop through properties set by user
-                        // println!("{}", "PDF document metadata properties".yellow());
                         for entry in &dictionary_entries {
                             // println!("----------> {}: {}", entry.0.cyan(), entry.1.green());
+                            let entry_exists =
+                                check_entry_exists(entry.1.to_string(), &string_values_btreemap);
 
-                            let (_key, value) = populate_dictionary(
-                                entry.1.to_string(),
-                                string_values_btreemap.clone(),
-                            );
-                            dictionary.set(entry.0.as_bytes().to_vec(), value);
+                            if entry_exists {
+                                let (_key, value) = populate_dictionary(
+                                    entry.1.to_string(),
+                                    string_values_btreemap.clone(),
+                                );
+                                dictionary.set(entry.0.as_bytes().to_vec(), value);
+                            }
                         }
                     }
 
@@ -163,10 +168,8 @@ pub fn build_pdf(
             }
         }
 
-        let check_mark = "\u{2713} ";
-        let cross_mark = "\u{2717} ";
         let mut error_message = "\n".to_owned()
-            + &cross_mark.on_red().to_string()
+            + &CROSS_MARK.on_red().to_string()
             + &pdf_file_path_as_string.on_red().to_string()
             + "\n";
         error_message.push_str(
@@ -183,13 +186,18 @@ pub fn build_pdf(
 
                 println!(
                     "\n{}{} → {}",
-                    check_mark.to_string().green(),
+                    CHECK_MARK.to_string().green(),
                     source_file.bright_green(),
                     pdf_file_path_as_string.yellow()
                 );
                 println!("{}", "PDF document metadata properties".yellow());
+
                 for entry in &dictionary_entries {
-                    println!("* {}: {}", entry.0.cyan(), entry.1.green());
+                    let entry_exists = check_entry_exists(entry.1.to_string(), &string_values_btreemap);
+
+                    if entry_exists {
+                        println!("* {}: {}", entry.0.cyan(), entry.1.green());
+                    }
                 }
             }
             Err(error) => println!("{} {}", error_message, error),
@@ -203,15 +211,12 @@ fn populate_dictionary(
     yaml_entry: String,
     string_values_btreemap: BTreeMap<String, String>,
 ) -> (Vec<u8>, LopdfObject) {
-    // let yaml_entry: String = match yaml_entry.as_str() {
-    //     "Subject" => "Description".to_string(),
-    //     _ => yaml_entry,
-    // };
+
     let key = yaml_entry.as_bytes().to_vec();
-    // println!("populate_dictionary:\n{:#?}", key);
     let value_string = string_values_btreemap
         .get(&yaml_entry.to_lowercase())
         .unwrap();
+
     let value_as_bytes: Vec<u8> = value_string.as_bytes().to_vec();
 
     (
@@ -236,4 +241,16 @@ fn is_file_open(file_path: &str) -> Result<bool, io::Error> {
             }
         }
     }
+}
+
+fn check_entry_exists(entry: String, btree: &BTreeMap<String, String>) -> bool {
+    let mut entry_exists = false;
+
+    for value in btree.keys() {
+        if *value == entry {
+            entry_exists = true;
+        }
+    }
+
+    entry_exists
 }
