@@ -7,46 +7,52 @@ use std::io;
 use std::path::{Path, PathBuf};
 
 use crate::utils::extract_to_end_string;
-use crate::PDFVersion;
+use crate::{PDFVersion, CHECK_MARK, CROSS_MARK};
 use async_std::task;
 use chromiumoxide::{cdp::browser_protocol::page::PrintToPdfParams, Browser, BrowserConfig};
 use futures::StreamExt;
 
-const CHECK_MARK: &str = "\u{2713} ";
-const CROSS_MARK: &str = "\u{2717} ";
-/// Generates a PDF from HTML content using headless Chrome.
+/// This function generates a PDF document from a given HTML string, source file, YAML data, output directory, dictionary entries, and PDF version.
 ///
 /// # Arguments
 ///
-/// * `generated_html` - The HTML content to convert to PDF.
-/// * `filename` - The name of the PDF file to generate.
+/// * `generated_html` - A `String` containing the HTML content to be converted to PDF.
+/// * `source_file` - A `String` representing the path to the source file (e.g., Markdown file) from which the HTML was generated.
+/// * `yaml_btreemap` - A `BTreeMap<String, Value>` containing the YAML data.
+/// * `output_directory` - A `PathBuf` representing the directory where the PDF file should be saved.
+/// * `dictionary_entries` - A `BTreeMap<String, String>` containing key-value pairs to be added or updated in the PDF document's metadata dictionary.
+/// * `pdf_version` - A `PDFVersion` enum value specifying the version of the PDF document.
 ///
-/// # Errors
+/// # Returns
 ///
-/// Returns a boxed error if there is an issue with the headless Chrome browser, navigation,
-/// capturing screenshot, printing to PDF, or writing the PDF file.
+/// * `Ok(())` if the PDF document was successfully generated and saved.
+/// * `Err(e)` if an error occurred during the process, where `e` is a `Box<dyn std::error::Error>` containing the error information.
 ///
-/// # Examples
+/// # Remarks
 ///
-/// ```
-/// use your_crate_name::build_pdf;
+/// This function performs the following tasks:
 ///
-/// let generated_html = "<html><body><h1>Hello, world!</h1></body></html>".to_string();
-/// let filename = "example";
-/// let result = build_pdf(generated_html, filename);
-/// assert!(result.is_ok());
-/// ```
+/// 1. Launches a Chromium browser instance using the `Browser::launch` method.
+/// 2. Constructs the HTML content by combining the generated HTML with a basic HTML structure and encoding it for URL safety.
+/// 3. Creates a new browser page and navigates to the HTML content.
+/// 4. Converts the page content to PDF format using the `page.pdf` method.
+/// 5. Creates a new `Document` object from the PDF data using the `Document::load_mem` method.
+/// 6. Updates the PDF document version based on the provided `pdf_version`.
+/// 7. Iterates over the objects in the PDF document and updates the "Creator" and "Producer" metadata entries, if present.
+/// 8. If the "Creator" metadata entry is found, adds or updates the PDF document's metadata properties based on the `dictionary_entries`.
+/// 9. Saves the modified PDF document to the specified output directory with a filename derived from the source file.
+/// 10. Displays a success message with the path to the generated PDF file and the updated metadata properties.
+///
+/// The function handles cases where the PDF file is already open by another process and prints an error message if an error occurs during the process.
 pub fn build_pdf(
     generated_html: String,
     source_file: String,
-    // filename: &str,
     yaml_btreemap: BTreeMap<String, Value>,
     output_directory: PathBuf,
     dictionary_entries: BTreeMap<String, String>,
     pdf_version: PDFVersion,
 ) -> Result<(), Box<dyn std::error::Error>> {
     task::block_on(async {
-        // println!("{}: {:#?}", "dictionary_entries".cyan(), &dictionary_entries);
         // Remove the markdown, md, file extension
         let filename_path = source_file.trim_end_matches(".md");
         // Extract only the file name
@@ -67,6 +73,8 @@ pub fn build_pdf(
             }
         });
 
+        // Set the title String to either the yaml 'title' entry,
+        // or (if there is no 'title' entry), the filename of the source file in question
         let title_string = yaml_btreemap.get("title").and_then(|value| value.as_str()).unwrap_or(&extracted_filename_as_string);
         let mut html_string = String::new();
         let html_before_string = format!("<html><head><title>{}</title><head><body>", title_string);
@@ -145,7 +153,6 @@ pub fn build_pdf(
                     if creator_found {
                         // Loop through properties set by user
                         for entry in &dictionary_entries {
-                            // println!("----------> {}: {}", entry.0.cyan(), entry.1.green());
                             let entry_exists =
                                 check_entry_exists(entry.1.to_string(), &string_values_btreemap);
 
@@ -210,24 +217,82 @@ pub fn build_pdf(
     })
 }
 
+/// This function populates a dictionary (BTreeMap) with a key-value pair.
+/// The key is a byte vector representation of the `yaml_entry` string,
+/// and the value is an `LopdfObject` containing a byte vector representation
+/// of the corresponding string value from the `string_values_btreemap`.
+///
+/// # Arguments
+///
+/// * `yaml_entry` - A `String` representing the key for the dictionary entry.
+/// * `string_values_btreemap` - A `BTreeMap<String, String>` containing the
+///   string values to be used for populating the dictionary.
+///
+/// # Returns
+///
+/// A tuple containing:
+///
+/// * A `Vec<u8>` representing the key (byte vector of `yaml_entry`).
+/// * An `LopdfObject` containing a byte vector representation of the
+///   corresponding string value from `string_values_btreemap`, with a
+///   `StringFormat::Literal` format.
+///
+/// # Panics
+///
+/// This function will panic if the `string_values_btreemap` does not contain
+/// a value for the lowercase version of the `yaml_entry` key.
 fn populate_dictionary(
     yaml_entry: String,
     string_values_btreemap: BTreeMap<String, String>,
 ) -> (Vec<u8>, LopdfObject) {
-
+    // Convert the `yaml_entry` string to a byte vector to be used as the key
     let key = yaml_entry.as_bytes().to_vec();
+
+    // Get the value from the `string_values_btreemap` corresponding to the
+    // lowercase version of the `yaml_entry` key
+    // This will panic if the key is not found in the BTreeMap
     let value_string = string_values_btreemap
         .get(&yaml_entry.to_lowercase())
         .unwrap();
 
+    // Convert the value string to a byte vector
     let value_as_bytes: Vec<u8> = value_string.as_bytes().to_vec();
 
+    // Return a tuple containing the key (byte vector of `yaml_entry`) and
+    // an `LopdfObject` containing the byte vector representation of the value
+    // string, with a `StringFormat::Literal` format
     (
         key,
         LopdfObject::String(value_as_bytes, StringFormat::Literal),
     )
 }
 
+/// This function checks if a file is open (exclusively locked by another process).
+///
+/// # Arguments
+///
+/// * `file_path` - A string slice (`&str`) representing the path to the file.
+///
+/// # Returns
+///
+/// * `Ok(true)` if the file is exclusively locked by another process.
+/// * `Ok(false)` if the file is not exclusively locked and can be opened for writing.
+/// * `Err(e)` if an error occurs while attempting to open the file for any reason
+///   other than the file being exclusively locked (e.g., file not found, invalid
+///   path, etc.).
+///
+/// # Remarks
+///
+/// This function attempts to open the specified file for writing using
+/// `OpenOptions::new().write(true).open(file_path)`. If the file can be opened
+/// successfully, it means that the file is not exclusively locked by another process,
+/// so the function returns `Ok(false)`.
+///
+/// If the `open` operation fails with an `io::ErrorKind::PermissionDenied` error,
+/// it indicates that the file is exclusively locked by another process, so the
+/// function returns `Ok(true)`.
+///
+/// For any other error kind, the function propagates the error by returning `Err(e)`.
 fn is_file_open(file_path: &str) -> Result<bool, io::Error> {
     match OpenOptions::new().write(true).open(file_path) {
         Ok(_) => {
@@ -246,14 +311,37 @@ fn is_file_open(file_path: &str) -> Result<bool, io::Error> {
     }
 }
 
+/// This function checks if a given entry (a key's value) exists in a `BTreeMap<String, String>`.
+///
+/// # Arguments
+///
+/// * `entry` - A `String` representing the entry (key's value) to search for in the `BTreeMap`.
+/// * `btree` - A reference to the `BTreeMap<String, String>` in which to search for the entry.
+///
+/// # Returns
+///
+/// * `true` if the `entry` exists as a value in the `btree`.
+/// * `false` if the `entry` does not exist as a value in the `btree`.
+///
+/// # Remarks
+///
+/// The function iterates over the keys of the `btree` and compares each key value with the `entry`.
+/// If a match is found, the `entry_exists` flag is set to `true`, and the loop is terminated.
+/// After the loop, the function returns the value of `entry_exists`.
 fn check_entry_exists(entry: String, btree: &BTreeMap<String, String>) -> bool {
+    // Initialize a mutable boolean flag `entry_exists` to false
     let mut entry_exists = false;
 
-    for value in btree.keys() {
-        if *value == entry {
+    // Iterate over the keys of the `btree`
+    for (_key, value) in btree.iter() {
+        // If the current key is equal to the `entry`
+        if value == &entry {
+            // Set `entry_exists` to true and break out of the loop
             entry_exists = true;
+            break;
         }
     }
 
+    // Return the final value of `entry_exists`
     entry_exists
 }
