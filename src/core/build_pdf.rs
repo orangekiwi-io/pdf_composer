@@ -75,7 +75,10 @@ pub fn build_pdf(
 
         // Set the title String to either the yaml 'title' entry,
         // or (if there is no 'title' entry), the filename of the source file in question
-        let title_string = yaml_btreemap.get("title").and_then(|value| value.as_str()).unwrap_or(&extracted_filename_as_string);
+        let title_string = yaml_btreemap
+            .get("title")
+            .and_then(|value| value.as_str())
+            .unwrap_or(&extracted_filename_as_string);
         let mut html_string = String::new();
         let html_before_string = format!("<html><head><title>{}</title><head><body>", title_string);
         let html_after_string = "</body></html>";
@@ -203,7 +206,8 @@ pub fn build_pdf(
                 println!("{}", "PDF document metadata properties".yellow());
 
                 for entry in &dictionary_entries {
-                    let entry_exists = check_entry_exists(entry.1.to_string(), &string_values_btreemap);
+                    let entry_exists =
+                        check_entry_exists(entry.1.to_string(), &string_values_btreemap);
 
                     if entry_exists {
                         println!("* {}: {}", entry.0.cyan(), entry.1.green());
@@ -333,9 +337,9 @@ fn check_entry_exists(entry: String, btree: &BTreeMap<String, String>) -> bool {
     let mut entry_exists = false;
 
     // Iterate over the keys of the `btree`
-    for (_key, value) in btree.iter() {
+    for (key, _value) in btree.iter() {
         // If the current key is equal to the `entry`
-        if value == &entry {
+        if key == &entry {
             // Set `entry_exists` to true and break out of the loop
             entry_exists = true;
             break;
