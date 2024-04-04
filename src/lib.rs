@@ -341,8 +341,8 @@ impl PDFComposer {
     ///
     /// // Define a document information entry
     /// let doc_info_entry = PDFDocInfoEntry {
-    ///     doc_info_entry: "Title".to_string(),
-    ///     yaml_entry: "Sample PDF Document".to_string(),
+    ///     doc_info_entry: "Author",
+    ///     yaml_entry: "author",
     /// };
     ///
     /// // Set the document information entry in the PDFComposer
