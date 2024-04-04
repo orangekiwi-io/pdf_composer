@@ -1,24 +1,47 @@
-/// Extracts a substring from the last occurrence of a specified delimiter to the end of the input string.
+/// This function extracts a substring from a given string starting from the last occurrence of the specified delimiter.
 ///
 /// # Arguments
 ///
-/// * `input` - The input string from which to extract the substring.
-/// * `delimiter_to_find` - The character delimiter to search for.
+/// * `input` - A string slice (`&str`) representing the original string.
+/// * `delimiter_to_find` - A character (`char`) representing the delimiter to search for.
 ///
 /// # Returns
 ///
-/// Returns `Some(&str)` containing the substring from the last occurrence of the delimiter to the end of the input string,
-/// or `None` if the delimiter is not found or if it is the last character in the input string.
+/// * `Some(&str)` - A string slice representing the substring starting from the last occurrence of the delimiter. If the delimiter is not present, the entire original string is returned.
+/// * `None` - If the last occurrence of the delimiter is the last character in the original string.
 ///
-/// # Example
+/// # Remarks
+///
+/// The function searches for the last occurrence of the specified delimiter using the `rfind` method.
+///
+/// If the delimiter is present, its last index is stored in `index`.
+///
+/// It then checks if this index is not the last character of the string. If it's not, `Some(&input[index + 1..])` is returned, which is a string slice starting from the character after the last delimiter until the end of the string.
+///
+/// If the delimiter is the last character of the string, `None` is returned.
+///
+/// If the delimiter is not present in the original string, the entire string is returned with `Some(input)`.
+///
+/// # Examples
 ///
 /// ```
-/// use your_crate_name::extract_to_end_string;
+/// let input_string = "hello/world/foo/bar";
+/// let delimiter = '/';
 ///
-/// let input = "my_string_to_test/path/to/filename";
-/// let delimiter_to_find = '/';
-/// let result = extract_to_end_string(input, delimiter_to_find);
-/// assert_eq!(result, Some("filename"));
+/// // Extracts "bar" from "hello/world/foo/bar"
+/// assert_eq!(extract_to_end_string(input_string, delimiter), Some("bar"));
+///
+/// let input_string = "hello_world";
+/// let delimiter = '/';
+///
+/// // Since there's no delimiter, the original string is returned
+/// assert_eq!(extract_to_end_string(input_string, delimiter), Some("hello_world"));
+///
+/// let input_string = "hello/";
+/// let delimiter = '/';
+///
+/// // Since the last delimiter is at the end, None is returned
+/// assert_eq!(extract_to_end_string(input_string, delimiter), None);
 /// ```
 pub fn extract_to_end_string(input: &str, delimiter_to_find: char) -> Option<&str> {
     if let Some(index) = input.rfind(delimiter_to_find) {
