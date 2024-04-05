@@ -1,3 +1,6 @@
+// Copyright © 2024 PDF Composer (pdf_composer). All rights reserved.
+// SPDX-License-Identifier: Apache-2.0 OR MIT
+
 use colored::Colorize;
 use lopdf::{Document, Object as LopdfObject, StringFormat};
 use serde_yaml::Value;

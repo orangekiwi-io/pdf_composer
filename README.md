@@ -35,13 +35,13 @@ PDF Dictionary entries are those Name and Value pairs you can see if you selcted
 * Subject
 * Keywords
 
-These **must** be capitalised. **PDFComposer** automatically captialises the reserved named ones only. All others will be left as entered.
+These **must** be capitalised. **PDF Composer** automatically captialises the reserved named ones only. All others will be left as entered.
 
-In **PDFComposer** The Title entry is a special case. As part of the PDF generation process, the `title` value from the YAML document is automatically inserted into the `<title>` tag in the HTML templates used. As a result, the Dictionary entry is populated. If no YAML value is found, then the filename of the source file will be used instead.
+In **PDF Composer** The Title entry is a special case. As part of the PDF generation process, the `title` value from the YAML document is automatically inserted into the `<title>` tag in the HTML templates used. As a result, the Dictionary entry is populated. If no YAML value is found, then the filename of the source file will be used instead.
 
 Empty entries are **not** allowed. If no corresponding YAML entry can be found, then an empty entry will not be added to the PDF document.
 
-For example, if you want to set a Dictionary entry called `Language` and you set it to a YAML entry that does not exist in the YAML document, **PDFComposer** will not create an empty entry.
+For example, if you want to set a Dictionary entry called `Language` and you set it to a YAML entry that does not exist in the YAML document, **PDF Composer** will not create an empty entry.
 
 ### Example for setting a Dictionary entry
 ```
@@ -95,7 +95,7 @@ The result will be: `The author of this document is {{name}}.`
 
 ## Example usage
 
-Assuming you have Rust up and running (tested with rust verion `1.76+`) and you have run `cargo add pdf_composer` to install the **PDFComposer** crate, then you can begin.
+Assuming you have Rust up and running (tested with rust verion `1.76+`) and you have run `cargo add pdf_composer` to install the **PDF Composer** crate, then you can begin.
 
 ```
 use pdf_composer::{PDFComposer, PDFDocInfoEntry, PDFVersion};
