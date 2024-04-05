@@ -1,4 +1,4 @@
-# ![PDF Composer](https://raw.githubusercontent.com/orangekiwi-io/pdf_composer/main/assets/PDFComposer.png) PDF Composer
+# PDF Composer
 > **PDF generation from Yaml Front Matter documents for Rust**
 
 ## Overview
