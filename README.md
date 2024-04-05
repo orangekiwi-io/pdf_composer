@@ -44,10 +44,10 @@ Empty entries are **not** allowed. If no corresponding YAML entry can be found, 
 For example, if you want to set a Dictionary entry called `Language` and you set it to a YAML entry that does not exist in the YAML document, **PDF Composer** will not create an empty entry.
 
 ### Example for setting a Dictionary entry
-```
+```rust
 PDFDocInfoEntry {
-    doc_info_entry: "Subject".to_owned(),
-    yaml_entry: "description".to_owned(),
+    doc_info_entry: "Subject",
+    yaml_entry: "description",
 }
 ```
 
@@ -60,7 +60,7 @@ PDFDocInfoEntry {
 It is possible to simple substitution within the markdown section of the YAML document. This is possible by using `{{my_yaml_value}}` within the markdown section.
 
 ### Example
-```
+```yaml
 ---
 
 # Front Matter (YAML)
@@ -78,7 +78,7 @@ The result will be: `The author of this document is Richard.`
 If the YAML value cannot be found, then the substitution placeholder will remain in the generated output.
 
 ### Example
-```
+```yaml
 ---
 
 # Front Matter (YAML)
@@ -97,7 +97,7 @@ The result will be: `The author of this document is {{name}}.`
 
 Assuming you have Rust up and running (tested with rust verion `1.76+`) and you have run `cargo add pdf_composer` to install the **PDF Composer** crate, then you can begin.
 
-```
+```rust
 use pdf_composer::{PDFComposer, PDFDocInfoEntry, PDFVersion};
 
 // Create a new PDFComposer instance
