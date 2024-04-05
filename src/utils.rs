@@ -1,3 +1,6 @@
+// Copyright © 2024 PDF Composer (pdf_composer). All rights reserved.
+// SPDX-License-Identifier: Apache-2.0 OR MIT
+
 /// The `extract_to_end_string` module contains a function to extract everything from a selected delimiter to the end of the string.
 mod extract_to_end_string;
 /// Re-exports the `extract_to_end_string` function for public use.

@@ -1,6 +1,12 @@
-use std::path::PathBuf;
+// Copyright © 2024 PDF Composer (pdf_composer). All rights reserved.
+// SPDX-License-Identifier: Apache-2.0 OR MIT
 
+//! # PDF Composer Examples
+//!
+//! This file is an example usage of the PDF Composer crate.
+//!
 use pdf_composer::{PDFComposer, PDFDocInfoEntry, PDFVersion};
+use std::path::PathBuf;
 
 fn main() {
     println!("Basic example");
@@ -54,5 +60,4 @@ fn main() {
 
     // Generate the PDFs
     bob.generate_pdfs();
-
 }

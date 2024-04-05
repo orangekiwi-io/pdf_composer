@@ -1,3 +1,6 @@
+// Copyright © 2024 PDF Composer (pdf_composer). All rights reserved.
+// SPDX-License-Identifier: Apache-2.0 OR MIT
+
 use std::io::{BufRead, BufReader, Lines, Result};
 use std::{fs::File, path::Path};
 

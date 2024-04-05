@@ -1,3 +1,6 @@
+// Copyright © 2024 PDF Composer (pdf_composer). All rights reserved.
+// SPDX-License-Identifier: Apache-2.0 OR MIT
+
 /// This function extracts a substring from a given string starting from the last occurrence of the specified delimiter.
 ///
 /// # Arguments
