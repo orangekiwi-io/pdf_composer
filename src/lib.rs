@@ -26,6 +26,7 @@ pub const CHECK_MARK: &str = "\u{2713} ";
 /// CONST for a cross character plus a space character
 pub const CROSS_MARK: &str = "\u{2717} ";
 
+const DEFAULT_MARGIN: f64 = 10.0;
 const MM_TO_INCH: f64 = 25.4;
 
 /// PDFComposer struct represents a tool for composing PDF documents from multiple source files.
@@ -121,7 +122,7 @@ impl PDFComposer {
             pdf_document_entries: None,
             paper_size: PaperSize::A4,
             orientation: PaperOrientation::Portrait,
-            margins: [f64::from("10".parse::<u32>().unwrap()) / MM_TO_INCH; 4],
+            margins: [DEFAULT_MARGIN / MM_TO_INCH; 4],
         }
     }
 
@@ -208,32 +209,47 @@ impl PDFComposer {
     /// my_pdf_doc.set_margins("20");
     /// ```
     pub fn set_margins(&mut self, margins: &str) {
-        // println!("{} {}", "margins".cyan(), margins);
         let margins_vector: Vec<&str> = margins.split(' ').collect();
-        // println!("margins_vector length: {}", margins_vector.len());
-        self.margins = match margins_vector.len() {
-            1 => [f64::from(margins_vector[0].parse::<u32>().unwrap()) / 25.4; 4],
-            2 => {
-                let top_bottom = f64::from(margins_vector[0].parse::<u32>().unwrap()) / 25.4;
-                let left_right = f64::from(margins_vector[1].parse::<u32>().unwrap()) / 25.4;
-                [top_bottom, left_right, top_bottom, left_right]
-            },
-            3 => {
-                let top = f64::from(margins_vector[0].parse::<u32>().unwrap()) / 25.4;
-                let left_right = f64::from(margins_vector[1].parse::<u32>().unwrap()) / 25.4;
-                let bottom = f64::from(margins_vector[2].parse::<u32>().unwrap()) / 25.4;
-                [top, left_right, bottom, left_right]
-            },
-            4 => {
-                let top = f64::from(margins_vector[0].parse::<u32>().unwrap()) / 25.4;
-                let right = f64::from(margins_vector[1].parse::<u32>().unwrap()) / 25.4;
-                let bottom = f64::from(margins_vector[2].parse::<u32>().unwrap()) / 25.4;
-                let left = f64::from(margins_vector[3].parse::<u32>().unwrap()) / 25.4;
-                [top, right, bottom, left]
-            },
-            _ => [f64::from(margins_vector[0].parse::<u32>().unwrap()) / 25.4; 4],
+
+        // Check to see if there are any non-integer entries for margin values
+        // If there are, then set any_letters_found to true and set all margins to default size
+        let any_letters_found = margins_vector.iter().any(|&x| x.parse::<u32>().is_err());
+
+        if any_letters_found {
+            self.margins = [DEFAULT_MARGIN / MM_TO_INCH; 4];
+        } else {
+            self.margins = match margins_vector.len() {
+                1 => {
+                    if margins_vector[0].is_empty() {
+                        [DEFAULT_MARGIN / MM_TO_INCH; 4]
+                    } else {
+                        [f64::from(margins_vector[0].parse::<u32>().unwrap()) / MM_TO_INCH; 4]
+                    }
+                }
+                2 => {
+                    let top_bottom =
+                        f64::from(margins_vector[0].parse::<u32>().unwrap()) / MM_TO_INCH;
+                    let left_right =
+                        f64::from(margins_vector[1].parse::<u32>().unwrap()) / MM_TO_INCH;
+                    [top_bottom, left_right, top_bottom, left_right]
+                }
+                3 => {
+                    let top = f64::from(margins_vector[0].parse::<u32>().unwrap()) / MM_TO_INCH;
+                    let left_right =
+                        f64::from(margins_vector[1].parse::<u32>().unwrap()) / MM_TO_INCH;
+                    let bottom = f64::from(margins_vector[2].parse::<u32>().unwrap()) / MM_TO_INCH;
+                    [top, left_right, bottom, left_right]
+                }
+                4 => {
+                    let top = f64::from(margins_vector[0].parse::<u32>().unwrap()) / MM_TO_INCH;
+                    let right = f64::from(margins_vector[1].parse::<u32>().unwrap()) / MM_TO_INCH;
+                    let bottom = f64::from(margins_vector[2].parse::<u32>().unwrap()) / MM_TO_INCH;
+                    let left = f64::from(margins_vector[3].parse::<u32>().unwrap()) / MM_TO_INCH;
+                    [top, right, bottom, left]
+                }
+                _ => [DEFAULT_MARGIN / MM_TO_INCH; 4],
+            }
         };
-        // self.margins = margins.to_owned();
     }
 
     /// Adds source files to the PDFComposer instance for processing.
