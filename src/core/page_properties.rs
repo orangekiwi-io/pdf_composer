@@ -94,10 +94,12 @@ pub enum PaperSize {
     JISB10,
 }
 
-/// Type for the unit Headless Chrome prefers for setting page size.
-/// Headless Chrome uses inches.
-/// The type is set here in case the units change from `f64`
+/// Type for the unit Headless Chrome prefers for setting paper size.
+/// Headless Chrome uses inches. The type is set here in case the units change from `f64`
 type PageUnit = f64;
+
+// /// Type for the page margins
+// pub type PageMargins = String;
 
 /// Trait to extract the width and height of the paper size from the `PaperSize` chosen
 pub (crate) trait ToDimensions {

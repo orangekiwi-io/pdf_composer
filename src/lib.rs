@@ -19,12 +19,14 @@ use utils::{merge_markdown_yaml, read_lines, yaml_mapping_to_btreemap};
 
 pub mod core;
 use core::build_pdf;
-pub use core::{PaperSize, PaperOrientation};
+pub use core::{PaperOrientation, PaperSize};
 
 /// CONST for a tick/check mark character plus a space character
 pub const CHECK_MARK: &str = "\u{2713} ";
 /// CONST for a cross character plus a space character
 pub const CROSS_MARK: &str = "\u{2717} ";
+
+const MM_TO_INCH: f64 = 25.4;
 
 /// PDFComposer struct represents a tool for composing PDF documents from multiple source files.
 pub struct PDFComposer {
@@ -38,8 +40,10 @@ pub struct PDFComposer {
     pdf_document_entries: Option<BTreeMap<String, String>>,
     /// Specifies the paper size for the PDF document.
     paper_size: PaperSize,
-    /// Specifies the orientation of the paper.
+    /// Specifies the orientation of the page.
     orientation: PaperOrientation,
+    /// Set the margins for the pages
+    margins: [f64; 4],
 }
 
 impl fmt::Debug for PDFComposer {
@@ -52,6 +56,7 @@ impl fmt::Debug for PDFComposer {
             .field("pdf_document_entries", &self.pdf_document_entries)
             .field("paper_size", &self.paper_size)
             .field("orientation", &self.orientation)
+            .field("margins", &&self.margins)
             .finish()
     }
 }
@@ -116,6 +121,7 @@ impl PDFComposer {
             pdf_document_entries: None,
             paper_size: PaperSize::A4,
             orientation: PaperOrientation::Portrait,
+            margins: [f64::from("10".parse::<u32>().unwrap()) / MM_TO_INCH; 4],
         }
     }
 
@@ -171,7 +177,7 @@ impl PDFComposer {
         self.paper_size = paper_size;
     }
 
-    /// Sets the paper orientation.
+    /// Sets the page orientation.
     ///
     /// # Examples
     ///
@@ -186,6 +192,48 @@ impl PDFComposer {
     /// ```
     pub fn set_orientation(&mut self, orientation: PaperOrientation) {
         self.orientation = orientation;
+    }
+
+    /// Sets the page margins.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use pdf_composer::PDFComposer;
+    ///
+    /// // Create a new PDF generator instance
+    /// let mut my_pdf_doc = PDFComposer::new();
+    ///
+    /// // Set the page margins to 20mm
+    /// my_pdf_doc.set_margins("20");
+    /// ```
+    pub fn set_margins(&mut self, margins: &str) {
+        // println!("{} {}", "margins".cyan(), margins);
+        let margins_vector: Vec<&str> = margins.split(' ').collect();
+        // println!("margins_vector length: {}", margins_vector.len());
+        self.margins = match margins_vector.len() {
+            1 => [f64::from(margins_vector[0].parse::<u32>().unwrap()) / 25.4; 4],
+            2 => {
+                let top_bottom = f64::from(margins_vector[0].parse::<u32>().unwrap()) / 25.4;
+                let left_right = f64::from(margins_vector[1].parse::<u32>().unwrap()) / 25.4;
+                [top_bottom, left_right, top_bottom, left_right]
+            },
+            3 => {
+                let top = f64::from(margins_vector[0].parse::<u32>().unwrap()) / 25.4;
+                let left_right = f64::from(margins_vector[1].parse::<u32>().unwrap()) / 25.4;
+                let bottom = f64::from(margins_vector[2].parse::<u32>().unwrap()) / 25.4;
+                [top, left_right, bottom, left_right]
+            },
+            4 => {
+                let top = f64::from(margins_vector[0].parse::<u32>().unwrap()) / 25.4;
+                let right = f64::from(margins_vector[1].parse::<u32>().unwrap()) / 25.4;
+                let bottom = f64::from(margins_vector[2].parse::<u32>().unwrap()) / 25.4;
+                let left = f64::from(margins_vector[3].parse::<u32>().unwrap()) / 25.4;
+                [top, right, bottom, left]
+            },
+            _ => [f64::from(margins_vector[0].parse::<u32>().unwrap()) / 25.4; 4],
+        };
+        // self.margins = margins.to_owned();
     }
 
     /// Adds source files to the PDFComposer instance for processing.
@@ -376,7 +424,8 @@ impl PDFComposer {
                         .unwrap(),
                         self.pdf_version,
                         self.paper_size,
-                        self.orientation
+                        self.orientation,
+                        self.margins,
                     );
                 }
                 Err(_) => {

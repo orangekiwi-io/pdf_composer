@@ -31,6 +31,7 @@ use futures::StreamExt;
 /// * `pdf_version` - A `PDFVersion` enum value specifying the version of the PDF document.
 /// * `paper_size` - The paper size for the PDF document.
 /// * `orientation` - The orientation (landscape or portrait) of the paper for the PDF document.
+/// * `margins` - Page margins.
 ///
 /// # Returns
 ///
@@ -61,12 +62,14 @@ pub fn build_pdf(
     dictionary_entries: BTreeMap<String, String>,
     pdf_version: PDFVersion,
     paper_size: PaperSize,
-    orientation: PaperOrientation
+    orientation: PaperOrientation,
+    margins: [f64; 4],
 ) -> Result<(), Box<dyn std::error::Error>> {
     let (page_width, page_height) = match orientation {
         PaperOrientation::Landscape => (paper_size.to_dimensions().1, paper_size.to_dimensions().0),
         PaperOrientation::Portrait => paper_size.to_dimensions(),
     };
+    // println!("{} {:#?}", "margins:".cyan(), margins);
 
     task::block_on(async {
         // Remove the markdown, md, file extension
@@ -148,10 +151,10 @@ pub fn build_pdf(
             // scale: todo!(),
             paper_width: Some(page_width),
             paper_height: Some(page_height),
-            // margin_top: Some(1.0),
-            // margin_bottom: Some(1.0),
-            // margin_left: Some(5.0),
-            // margin_right: Some(1.0),
+            margin_top: Some(margins[0]),
+            margin_right: Some(margins[1]),
+            margin_bottom: Some(margins[2]),
+            margin_left: Some(margins[3]),
             // page_ranges: todo!(),
             // header_template: todo!(),
             // footer_template: todo!(),
