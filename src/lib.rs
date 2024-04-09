@@ -5,13 +5,11 @@
     html_logo_url = "https://raw.githubusercontent.com/orangekiwi-io/pdf_composer/main/assets/PDFComposer.png"
 )]
 #![doc = include_str!("../README.md")]
-
 // Crate configuration
 #![crate_name = "pdf_composer"]
 #![crate_type = "lib"]
 
 use colored::Colorize;
-use page_properties::PaperSize;
 use rayon::prelude::*;
 use serde_yaml::Value;
 use std::{collections::BTreeMap, fmt, fs, path::PathBuf, process};
@@ -21,8 +19,7 @@ use utils::{merge_markdown_yaml, read_lines, yaml_mapping_to_btreemap};
 
 pub mod core;
 use core::build_pdf;
-
-pub mod page_properties;
+pub use core::{PaperSize, PaperOrientation};
 
 /// CONST for a tick/check mark character plus a space character
 pub const CHECK_MARK: &str = "\u{2713} ";
@@ -41,6 +38,8 @@ pub struct PDFComposer {
     pdf_document_entries: Option<BTreeMap<String, String>>,
     /// Specifies the paper size for the PDF document.
     paper_size: PaperSize,
+    /// Specifies the orientation of the paper.
+    orientation: PaperOrientation,
 }
 
 impl fmt::Debug for PDFComposer {
@@ -52,6 +51,7 @@ impl fmt::Debug for PDFComposer {
             .field("pdf_version", &self.pdf_version)
             .field("pdf_document_entries", &self.pdf_document_entries)
             .field("paper_size", &self.paper_size)
+            .field("orientation", &self.orientation)
             .finish()
     }
 }
@@ -115,6 +115,7 @@ impl PDFComposer {
             pdf_version: PDFVersion::V1_7,
             pdf_document_entries: None,
             paper_size: PaperSize::A4,
+            orientation: PaperOrientation::Portrait,
         }
     }
 
@@ -163,11 +164,28 @@ impl PDFComposer {
     /// // Create a new PDF generator instance
     /// let mut my_pdf_doc = PDFComposer::new();
     ///
-    /// // Set the output directory to PaperSize::A4
+    /// // Set the paper size to A5
     /// my_pdf_doc.set_paper_size(PaperSize::A5);
     /// ```
     pub fn set_paper_size(&mut self, paper_size: PaperSize) {
         self.paper_size = paper_size;
+    }
+
+    /// Sets the paper orientation.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use pdf_composer::PDFComposer;
+    ///
+    /// // Create a new PDF generator instance
+    /// let mut my_pdf_doc = PDFComposer::new();
+    ///
+    /// // Set the orientation to Landscape
+    /// my_pdf_doc.set_orientation(PaperOrientation::Landscape);
+    /// ```
+    pub fn set_orientation(&mut self, orientation: PaperOrientation) {
+        self.orientation = orientation;
     }
 
     /// Adds source files to the PDFComposer instance for processing.
@@ -358,6 +376,7 @@ impl PDFComposer {
                         .unwrap(),
                         self.pdf_version,
                         self.paper_size,
+                        self.orientation
                     );
                 }
                 Err(_) => {

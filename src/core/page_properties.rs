@@ -1,94 +1,106 @@
-/// Enum to represent different supported paper sizes
+/// Enum representing paper orientation
+#[derive(Clone, Copy, Debug)]
+pub enum PaperOrientation {
+    Landscape,
+    Portrait,
+}
+
+/// Enum representing different paper sizes
 /// See the following for more information:
 /// * A Series Paper Sizes (ISO 216): <https://www.papersizes.org/a-paper-sizes.htm>
 /// * B Series Paper Sizes (ISO 216): <https://www.papersizes.org/b-paper-sizes.htm>
 /// * US Paper Sizes: <https://www.papersizes.org/us-paper-sizes.htm>
 /// * Japanese Paper Sizes: <https://www.papersizes.org/japanese-sizes.htm>
+/// Paper sizes from ISO As and Bs, US Letter and Japanese sizes
 #[derive(Clone, Copy, Debug)]
 pub enum PaperSize {
-    /// A0
+    /// A0 (ISO 216)
     A0,
-    /// A1
+    /// A1 (ISO 216)
     A1,
-    /// A2
+    /// A2 (ISO 216)
     A2,
-    /// A3
+    /// A3 (ISO 216)
     A3,
-    /// A4
+    /// A4 (ISO 216)
     A4,
-    /// A5
+    /// A5 (ISO 216)
     A5,
-    /// A6
+    /// A6 (ISO 216)
     A6,
-    /// A7
+    /// A7 (ISO 216)
     A7,
-    /// A8
+    /// A8 (ISO 216)
     A8,
-    /// A9
+    /// A9 (ISO 216)
     A9,
-    /// A10
+    /// A10 (ISO 216)
     A10,
-    /// B0
+    /// B0 (ISO 216)
     B0,
-    /// B1,
+    /// B1 (ISO 216)
     B1,
-    /// B2,
+    /// B2 (ISO 216)
     B2,
-    /// B3,
+    /// B3 (ISO 216)
     B3,
-    /// B4,
+    /// B4 (ISO 216)
     B4,
-    /// B5,
+    /// B5 (ISO 216)
     B5,
-    /// B6,
+    /// B6 (ISO 216)
     B6,
-    /// B7,
+    /// B7 (ISO 216)
     B7,
-    /// B8,
+    /// B8 (ISO 216)
     B8,
-    /// B9,
+    /// B9 (ISO 216)
     B9,
-    /// B10,
+    /// B10 (ISO 216)
     B10,
-    /// Half Letter,
+    /// US Half Letter
     HalfLetter,
-    /// Letter,
+    /// US Letter
     Letter,
-    /// Legal,
+    /// US Legal
     Legal,
-    /// JuniorLegal,
+    /// US Junior Legal
     JuniorLegal,
-    /// Ledger,
+    /// US Ledger
     Ledger,
-    /// Tabloid,
+    /// US Tabloid
     Tabloid,
-    /// JIS B0,
+    /// Japanese JIS B0
     JISB0,
-    /// JIS B1,
+    /// Japanese JIS B1
     JISB1,
-    /// JIS B2,
+    /// Japanese JIS B2
     JISB2,
-    /// JIS B3,
+    /// Japanese JIS B3
     JISB3,
-    /// JIS B4,
+    /// Japanese JIS B4
     JISB4,
-    /// JIS B5,
+    /// Japanese JIS B5
     JISB5,
-    /// JIS B6,
+    /// Japanese JIS B6
     JISB6,
-    /// JIS B7,
+    /// Japanese JIS B7
     JISB7,
-    /// JIS B8,
+    /// Japanese JIS B8
     JISB8,
-    /// JIS B9,
+    /// Japanese JIS B9
     JISB9,
-    /// JIS B10,
+    /// Japanese JIS B10
     JISB10,
 }
 
+/// Type for the unit Headless Chrome prefers for setting page size.
+/// Headless Chrome uses inches.
+/// The type is set here in case the units change from `f64`
 type PageUnit = f64;
-pub trait ToDimensions {
-    // fn to_dimensions(&self) -> PaperDimension;
+
+/// Trait to extract the width and height of the paper size from the `PaperSize` chosen
+pub (crate) trait ToDimensions {
     fn to_dimensions(&self) -> (PageUnit, PageUnit);
 }
 
@@ -99,10 +111,9 @@ pub struct PaperDimension {
 }
 
 impl ToDimensions for PaperSize {
-    /// Implements the ToDimensions trait for PaperSize,
-    /// converting enum variants to width and height sizes in millimeters (mm)
+    /// Implements the `to_dimensions` trait for `PaperSize`,
+    /// converting enum variants to width and height sizes in inches (in)
     fn to_dimensions(&self) -> (PageUnit, PageUnit) {
-        // fn to_dimensions(&self) -> PaperDimension {
         let output = match self {
             PaperSize::A0 => PaperDimension {
                 width: 33.1,

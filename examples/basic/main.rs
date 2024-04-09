@@ -5,7 +5,7 @@
 //!
 //! This file is an example usage of the PDF Composer crate.
 //!
-use pdf_composer::{page_properties::PaperSize, PDFComposer, PDFDocInfoEntry, PDFVersion};
+use pdf_composer::{PaperSize, PDFComposer, PDFDocInfoEntry, PDFVersion};
 use std::path::PathBuf;
 
 fn main() {

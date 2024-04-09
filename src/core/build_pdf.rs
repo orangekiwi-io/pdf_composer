@@ -9,9 +9,12 @@ use std::fs::{create_dir_all, OpenOptions};
 use std::io;
 use std::path::{Path, PathBuf};
 
-use crate::page_properties::{PaperSize, ToDimensions};
+use crate::core::page_properties::ToDimensions;
 use crate::utils::extract_to_end_string;
-use crate::{PDFVersion, CHECK_MARK, CROSS_MARK};
+use crate::{
+    core::{PaperOrientation, PaperSize},
+    PDFVersion, CHECK_MARK, CROSS_MARK,
+};
 use async_std::task;
 use chromiumoxide::{cdp::browser_protocol::page::PrintToPdfParams, Browser, BrowserConfig};
 use futures::StreamExt;
@@ -26,6 +29,8 @@ use futures::StreamExt;
 /// * `output_directory` - A `PathBuf` representing the directory where the PDF file should be saved.
 /// * `dictionary_entries` - A `BTreeMap<String, String>` containing key-value pairs to be added or updated in the PDF document's metadata dictionary.
 /// * `pdf_version` - A `PDFVersion` enum value specifying the version of the PDF document.
+/// * `paper_size` - The paper size for the PDF document.
+/// * `orientation` - The orientation (landscape or portrait) of the paper for the PDF document.
 ///
 /// # Returns
 ///
@@ -56,8 +61,12 @@ pub fn build_pdf(
     dictionary_entries: BTreeMap<String, String>,
     pdf_version: PDFVersion,
     paper_size: PaperSize,
+    orientation: PaperOrientation
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let (page_width, page_height) = paper_size.to_dimensions();
+    let (page_width, page_height) = match orientation {
+        PaperOrientation::Landscape => (paper_size.to_dimensions().1, paper_size.to_dimensions().0),
+        PaperOrientation::Portrait => paper_size.to_dimensions(),
+    };
 
     task::block_on(async {
         // Remove the markdown, md, file extension
@@ -139,10 +148,10 @@ pub fn build_pdf(
             // scale: todo!(),
             paper_width: Some(page_width),
             paper_height: Some(page_height),
-            margin_top: Some(1.0),
-            margin_bottom: Some(1.0),
-            margin_left: Some(5.0),
-            margin_right: Some(1.0),
+            // margin_top: Some(1.0),
+            // margin_bottom: Some(1.0),
+            // margin_left: Some(5.0),
+            // margin_right: Some(1.0),
             // page_ranges: todo!(),
             // header_template: todo!(),
             // footer_template: todo!(),

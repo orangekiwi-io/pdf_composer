@@ -1,10 +1,10 @@
 [package]
 name = "pdf_composer"
-version = "0.2.3"
+version = "0.2.4"
 authors = ["OrangeKiwi", "Richard Locke"]
 edition = "2021"
 rust-version = "1.77.1"
-description = "Crate to create PDF documents from YAML Front Matter source documents"
+description = "Create PDF documents from YAML Front Matter source documents"
 readme = "README.md"
 repository = "https://github.com/orangekiwi-io/pdf_composer"
 license = "MIT OR Apache-2.0"
