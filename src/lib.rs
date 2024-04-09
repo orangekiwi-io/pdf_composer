@@ -11,6 +11,7 @@
 #![crate_type = "lib"]
 
 use colored::Colorize;
+use page_properties::PaperSize;
 use rayon::prelude::*;
 use serde_yaml::Value;
 use std::{collections::BTreeMap, fmt, fs, path::PathBuf, process};
@@ -18,8 +19,10 @@ use std::{collections::BTreeMap, fmt, fs, path::PathBuf, process};
 mod utils;
 use utils::{merge_markdown_yaml, read_lines, yaml_mapping_to_btreemap};
 
-mod core;
+pub mod core;
 use core::build_pdf;
+
+pub mod page_properties;
 
 /// CONST for a tick/check mark character plus a space character
 pub const CHECK_MARK: &str = "\u{2713} ";
@@ -36,6 +39,8 @@ pub struct PDFComposer {
     pdf_version: PDFVersion,
     /// Optional mapping of document entries, where the key represents the entry name and the value represents the content.
     pdf_document_entries: Option<BTreeMap<String, String>>,
+    /// Specifies the paper size for the PDF document.
+    paper_size: PaperSize,
 }
 
 impl fmt::Debug for PDFComposer {
@@ -46,6 +51,7 @@ impl fmt::Debug for PDFComposer {
             .field("output_directory", &self.output_directory)
             .field("pdf_version", &self.pdf_version)
             .field("pdf_document_entries", &self.pdf_document_entries)
+            .field("paper_size", &self.paper_size)
             .finish()
     }
 }
@@ -108,6 +114,7 @@ impl PDFComposer {
             output_directory: "pdf_composer_pdfs".into(),
             pdf_version: PDFVersion::V1_7,
             pdf_document_entries: None,
+            paper_size: PaperSize::A4,
         }
     }
 
@@ -123,7 +130,7 @@ impl PDFComposer {
     /// let mut my_pdf_doc = PDFComposer::new();
     ///
     /// // Set the PDF version to 2.0
-    /// my_pdf_doc.set_pdf_version(PDFVersion::V2_0);
+    /// my_pdf_doc.set_pdf_version(PDFVersion::V1_7);
     /// ```
     pub fn set_pdf_version(&mut self, pdf_version: PDFVersion) {
         self.pdf_version = pdf_version;
@@ -144,6 +151,23 @@ impl PDFComposer {
     /// ```
     pub fn set_output_directory(&mut self, output_directory: &str) {
         self.output_directory = output_directory.into();
+    }
+
+    /// Sets the paper size for the PDF documents.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use pdf_composer::PDFComposer;
+    ///
+    /// // Create a new PDF generator instance
+    /// let mut my_pdf_doc = PDFComposer::new();
+    ///
+    /// // Set the output directory to PaperSize::A4
+    /// my_pdf_doc.set_paper_size(PaperSize::A5);
+    /// ```
+    pub fn set_paper_size(&mut self, paper_size: PaperSize) {
+        self.paper_size = paper_size;
     }
 
     /// Adds source files to the PDFComposer instance for processing.
@@ -333,6 +357,7 @@ impl PDFComposer {
                         > as Clone>::clone(&self.pdf_document_entries)
                         .unwrap(),
                         self.pdf_version,
+                        self.paper_size,
                     );
                 }
                 Err(_) => {

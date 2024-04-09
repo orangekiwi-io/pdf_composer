@@ -25,6 +25,72 @@ To set the version see the table showing the corresponding enum with version num
 | PDFVersion::V1_7 | 1.7 |
 | PDFVersion::V2_0 | 2.0 |
 
+### Paper sizes
+List of supported paper sizes:
+
+#### ISO 216 A series paper sizes
+
+| Size | Width x Height (mm) | Width x Height (inches) |
+|---|---|---|
+| A0  | 841mm x 1189mm | 33.1" x 46.8" |
+| A1  | 594mm x 841mm  | 23.4" x 33.1" |
+| A2  | 420mm x 594mm  | 16.5" x 23.4" |
+| A3  | 297mm x 420mm  | 11.7" x 16.5" |
+| A4  | 210mm x 297mm  | 8.3" x 11.7"  |
+| A5  | 148mm x 210mm  | 5.8" x 8.3"   |
+| A6  | 105mm x 148mm  | 4.1" x 5.8"   |
+| A7  | 74mm x 105mm   | 2.9" x 4.1"   |
+| A8  | 52mm x 74mm    | 2.0" x 2.9"   |
+| A9  | 37mm x 52mm    | 1.5" x 2.0"   |
+| A10 | 26mm x 37mm    | 1.0" x 1.5"   |
+
+#### ISO 216 B series paper sizes
+
+| Size | Width x Height (mm) | Width x Height (inches) |
+|---|---|---|
+| B0  | 1000mm x 1414mm | 39.4" x 55.7" |
+| B1  | 707mm x 1000mm  | 27.8" x 39.4" |
+| B2  | 500mm x 707mm   | 19.7" x 27.8" |
+| B3  | 353mm x 500mm   | 13.9" x 19.7" |
+| B4  | 250mm x 353mm   | 9.8" x 13.9"  |
+| B5  | 176mm x 250mm   | 6.9" x 9.8"   |
+| B6  | 125mm x 176mm   | 4.9" x 6.9"   |
+| B7  | 88mm x 125mm    | 3.5" x 4.9"   |
+| B8  | 62mm x 88mm     | 2.4" x 3.5"   |
+| B9  | 44mm x 62mm     | 1.7" x 2.4"   |
+| B10 | 31mm x 44mm     | 1.2" x 1.7"   |
+
+#### US paper sizes
+
+| Size         | Width x Height (mm) | Width x Height (inches) |
+|---|---|---|
+| Half Letter  | 140mm x 216mm | 5.5" x 8.5" |
+| Letter       | 216mm x 279mm | 8.5" x 11"  |
+| Legal        | 216mm x 356mm | 8.5" x 14"  |
+| Junior Legal | 203mm x 127mm | 8" x 5"     |
+| Ledger       | 432mm x 279mm | 17" x 11"   |
+| Tabloid      | 279mm x 432mm | 11" x 17"   |
+
+### JIS paper sizes
+
+| Size | Width x Height (mm) | Width x Height (in) |
+|---|---|---|
+| B0  | 1030 x 1456 mm | 40.6 x 57.3 in |
+| B1  | 728 x 1030 mm  | 28.7 x 40.6 in |
+| B2  | 515 x 728 mm   | 20.3 x 28.7 in |
+| B3  | 364 x 515 mm   | 14.3 x 20.3 in |
+| B4  | 257 x 364 mm   | 10.1 x 14.3 in |
+| B5  | 182 x 257 mm   | 7.2 x 10.1 in  |
+| B6  | 128 x 182 mm   | 5.0 x 7.2 in   |
+| B7  | 91 x 128 mm    | 3.6 x 5.0 in   |
+| B8  | 64 x 91 mm     | 2.5 x 3.6 in   |
+| B9  | 45 x 64 mm     | 1.8 x 2.5 in   |
+| B10 | 32 x 45 mm     | 1.3 x 1.8 in   |
+
+### Page margins
+
+Set the page margins using CSS notation... explain.
+
 ## PDF Dictionary entries
 
 PDF Dictionary entries are those Name and Value pairs you can see if you selcted "Document Properties" within a PDF Reader on a PDF document. Dictionary entries are case sensitive, with a few reserved names.

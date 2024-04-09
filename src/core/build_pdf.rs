@@ -9,6 +9,7 @@ use std::fs::{create_dir_all, OpenOptions};
 use std::io;
 use std::path::{Path, PathBuf};
 
+use crate::page_properties::{PaperSize, ToDimensions};
 use crate::utils::extract_to_end_string;
 use crate::{PDFVersion, CHECK_MARK, CROSS_MARK};
 use async_std::task;
@@ -54,7 +55,10 @@ pub fn build_pdf(
     output_directory: PathBuf,
     dictionary_entries: BTreeMap<String, String>,
     pdf_version: PDFVersion,
+    paper_size: PaperSize,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    let (page_width, page_height) = paper_size.to_dimensions();
+
     task::block_on(async {
         // Remove the markdown, md, file extension
         let filename_path = source_file.trim_end_matches(".md");
@@ -76,6 +80,12 @@ pub fn build_pdf(
             }
         });
 
+        // TODO RL Template this? External file?
+        // Set CSS @page property for paper size
+        let mut css_page = String::from("<style>\n@media print {\n @page {\nsize: ");
+        css_page.push_str(&format!("{}in {}in;", page_width, page_height));
+        css_page.push_str("\n}\n}\n</style>");
+
         // Set the title String to either the yaml 'title' entry,
         // or (if there is no 'title' entry), the filename of the source file in question
         let title_string = yaml_btreemap
@@ -83,8 +93,16 @@ pub fn build_pdf(
             .and_then(|value| value.as_str())
             .unwrap_or(&extracted_filename_as_string);
         let mut html_string = String::new();
-        let html_before_string = format!("<html><head><title>{}</title><head><body>", title_string);
+        let html_before_string = format!(
+            "<html><head><title>{}</title>{}</head><body>",
+            title_string, css_page
+        );
         let html_after_string = "</body></html>";
+        // println!(
+        //     "{}{}{}",
+        //     html_before_string, &generated_html, html_after_string
+        // );
+        // println!();
         // Encode the HTML content to URL-safe format
         // url_escape:: comes from the url_escape crate
         url_escape::encode_query_to_string(generated_html, &mut html_string);
@@ -114,7 +132,27 @@ pub fn build_pdf(
         let _html = page.wait_for_navigation().await?.content().await?;
 
         // Convert the page to PDF format
-        let pdf = page.pdf(PrintToPdfParams::default()).await?;
+        let paper_settings = PrintToPdfParams {
+            // landscape: todo!(),
+            // display_header_footer: todo!(),
+            // print_background: todo!(),
+            // scale: todo!(),
+            paper_width: Some(page_width),
+            paper_height: Some(page_height),
+            margin_top: Some(1.0),
+            margin_bottom: Some(1.0),
+            margin_left: Some(5.0),
+            margin_right: Some(1.0),
+            // page_ranges: todo!(),
+            // header_template: todo!(),
+            // footer_template: todo!(),
+            prefer_css_page_size: Some(true),
+            // transfer_mode: todo!(),
+            ..Default::default()
+        };
+
+        // let pdf = page.pdf(PrintToPdfParams::default()).await?;
+        let pdf = page.pdf(paper_settings).await?;
 
         // Create a new PDF document
         let mut doc: Document = Document::load_mem(&pdf)?;
