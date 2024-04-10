@@ -1,8 +1,8 @@
 // Copyright © 2024 PDF Composer (pdf_composer). All rights reserved.
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-use std::collections::BTreeMap;
 use serde_yaml::Value;
+use std::collections::BTreeMap;
 
 /// This function converts a YAML `Value::Mapping` into a `BTreeMap<String, Value>`. BTreeMaps are automatically alphabetically sorted.
 ///

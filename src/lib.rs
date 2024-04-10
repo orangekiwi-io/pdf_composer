@@ -5,7 +5,6 @@
     html_logo_url = "https://raw.githubusercontent.com/orangekiwi-io/pdf_composer/main/assets/PDFComposer.png"
 )]
 #![doc = include_str!("../README.md")]
-
 // Crate configuration
 #![crate_name = "pdf_composer"]
 #![crate_type = "lib"]
@@ -18,13 +17,22 @@ use std::{collections::BTreeMap, fmt, fs, path::PathBuf, process};
 mod utils;
 use utils::{merge_markdown_yaml, read_lines, yaml_mapping_to_btreemap};
 
-mod core;
-use core::build_pdf;
+/// The 'core' module containing the main functions for PDF Composer
+pub mod core;
+use core::{build_pdf, PageMargins};
+pub use core::{FontsStandard, PaperOrientation, PaperSize};
+
+use crate::core::build_pdf::PDFBuilder;
 
 /// CONST for a tick/check mark character plus a space character
 pub const CHECK_MARK: &str = "\u{2713} ";
 /// CONST for a cross character plus a space character
 pub const CROSS_MARK: &str = "\u{2717} ";
+
+// Default margin is 10mm
+const DEFAULT_MARGIN: f64 = 10.0;
+// Convert mm to inches
+const MM_TO_INCH: f64 = 25.4;
 
 /// PDFComposer struct represents a tool for composing PDF documents from multiple source files.
 pub struct PDFComposer {
@@ -36,6 +44,14 @@ pub struct PDFComposer {
     pdf_version: PDFVersion,
     /// Optional mapping of document entries, where the key represents the entry name and the value represents the content.
     pdf_document_entries: Option<BTreeMap<String, String>>,
+    /// Specifies the paper size for the PDF document.
+    paper_size: PaperSize,
+    /// Specifies the orientation of the page.
+    orientation: PaperOrientation,
+    /// Set the margins for the pages
+    margins: PageMargins,
+    /// Set the for the PDF document
+    font: FontsStandard,
 }
 
 impl fmt::Debug for PDFComposer {
@@ -46,6 +62,10 @@ impl fmt::Debug for PDFComposer {
             .field("output_directory", &self.output_directory)
             .field("pdf_version", &self.pdf_version)
             .field("pdf_document_entries", &self.pdf_document_entries)
+            .field("paper_size", &self.paper_size)
+            .field("orientation", &self.orientation)
+            .field("margins", &&self.margins)
+            .field("font", &&self.font)
             .finish()
     }
 }
@@ -108,6 +128,10 @@ impl PDFComposer {
             output_directory: "pdf_composer_pdfs".into(),
             pdf_version: PDFVersion::V1_7,
             pdf_document_entries: None,
+            paper_size: PaperSize::A4,
+            orientation: PaperOrientation::Portrait,
+            margins: [DEFAULT_MARGIN / MM_TO_INCH; 4],
+            font: FontsStandard::Helvetica,
         }
     }
 
@@ -123,7 +147,7 @@ impl PDFComposer {
     /// let mut my_pdf_doc = PDFComposer::new();
     ///
     /// // Set the PDF version to 2.0
-    /// my_pdf_doc.set_pdf_version(PDFVersion::V2_0);
+    /// my_pdf_doc.set_pdf_version(PDFVersion::V1_7);
     /// ```
     pub fn set_pdf_version(&mut self, pdf_version: PDFVersion) {
         self.pdf_version = pdf_version;
@@ -144,6 +168,140 @@ impl PDFComposer {
     /// ```
     pub fn set_output_directory(&mut self, output_directory: &str) {
         self.output_directory = output_directory.into();
+    }
+
+    /// Sets the paper size for the PDF documents.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use pdf_composer::PDFComposer;
+    ///
+    /// // Create a new PDF generator instance
+    /// let mut my_pdf_doc = PDFComposer::new();
+    ///
+    /// // Set the paper size to A5
+    /// my_pdf_doc.set_paper_size(PaperSize::A5);
+    /// ```
+    pub fn set_paper_size(&mut self, paper_size: PaperSize) {
+        self.paper_size = paper_size;
+    }
+
+    /// Sets the page orientation.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use pdf_composer::PDFComposer;
+    ///
+    /// // Create a new PDF generator instance
+    /// let mut my_pdf_doc = PDFComposer::new();
+    ///
+    /// // Set the orientation to Landscape
+    /// my_pdf_doc.set_orientation(PaperOrientation::Landscape);
+    /// ```
+    pub fn set_orientation(&mut self, orientation: PaperOrientation) {
+        self.orientation = orientation;
+    }
+
+    /// Sets the font for the PDF.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use pdf_composer::PDFComposer;
+    ///
+    /// // Create a new PDF generator instance
+    /// let mut my_pdf_doc = PDFComposer::new();
+    ///
+    /// // Set the font to Times Roman
+    /// my_pdf_doc.set_font(FontsStandard::TimesRoman);
+    /// ```
+    pub fn set_font(&mut self, font: FontsStandard) {
+        self.font = font;
+    }
+
+    /// Sets the page margins.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use pdf_composer::PDFComposer;
+    ///
+    /// // Create a new PDF generator instance
+    /// let mut my_pdf_doc = PDFComposer::new();
+    ///
+    /// // Set the page margins to 20mm
+    /// my_pdf_doc.set_margins("20");
+    /// ```
+    pub fn set_margins(&mut self, margins: &str) {
+        // println!("{} {}", "margins:".cyan(), margins);
+        // Trim (remove) white space from both ends of the margins string
+        let mut margins_vector: Vec<&str> = margins.trim().split(' ').collect();
+        // Remove all empty elements in the margins vector
+        margins_vector.retain(|ele| !ele.is_empty());
+        // println!(
+        //     "{} {:?}",
+        //     "margins_vector:".cyan(),
+        //     margins_vector.to_owned()
+        // );
+
+        // Check to see if there are any non-integer entries for margin values
+        // If there are, then set any_letters_found to true and set all margins to default size
+        let any_letters_found = margins_vector
+            .iter()
+            .any(|&ele| ele.parse::<u32>().is_err());
+
+        if any_letters_found {
+            self.margins = [DEFAULT_MARGIN / MM_TO_INCH; 4];
+            let troublesome_margins: String = margins_vector.join(", ");
+            let margin_error_message = "".to_owned()
+                + &CROSS_MARK.red().to_string()
+                + &"Something wrong with the margin values provided "
+                    .red()
+                    .to_string()
+                + &"[".yellow().to_string()
+                + &troublesome_margins.yellow().to_string()
+                + &"]".yellow().to_string()
+                + "\nUsing the default value of "
+                + &DEFAULT_MARGIN.to_string()
+                + "mm for the margins.\n";
+            eprintln!("{}", margin_error_message);
+        } else {
+            self.margins = match margins_vector.len() {
+                1 => {
+                    if margins_vector[0].is_empty() {
+                        [DEFAULT_MARGIN / MM_TO_INCH; 4]
+                    } else {
+                        [f64::from(margins_vector[0].parse::<u32>().unwrap()) / MM_TO_INCH; 4]
+                    }
+                }
+                2 => {
+                    let top_bottom =
+                        f64::from(margins_vector[0].parse::<u32>().unwrap()) / MM_TO_INCH;
+                    let left_right =
+                        f64::from(margins_vector[1].parse::<u32>().unwrap()) / MM_TO_INCH;
+                    [top_bottom, left_right, top_bottom, left_right]
+                }
+                3 => {
+                    let top = f64::from(margins_vector[0].parse::<u32>().unwrap()) / MM_TO_INCH;
+                    let left_right =
+                        f64::from(margins_vector[1].parse::<u32>().unwrap()) / MM_TO_INCH;
+                    let bottom = f64::from(margins_vector[2].parse::<u32>().unwrap()) / MM_TO_INCH;
+                    [top, left_right, bottom, left_right]
+                }
+                4 => {
+                    let top = f64::from(margins_vector[0].parse::<u32>().unwrap()) / MM_TO_INCH;
+                    let right = f64::from(margins_vector[1].parse::<u32>().unwrap()) / MM_TO_INCH;
+                    let bottom = f64::from(margins_vector[2].parse::<u32>().unwrap()) / MM_TO_INCH;
+                    let left = f64::from(margins_vector[3].parse::<u32>().unwrap()) / MM_TO_INCH;
+                    [top, right, bottom, left]
+                }
+                _ => [DEFAULT_MARGIN / MM_TO_INCH; 4],
+            }
+        };
+
+        // println!("{:#?}", self.margins);
     }
 
     /// Adds source files to the PDFComposer instance for processing.
@@ -265,11 +423,7 @@ impl PDFComposer {
             match fs::metadata(filename.clone()) {
                 Ok(_) => 'file_found: {
                     // File exists, proceed with reading.
-                    println!(
-                        "File {} exists. {}",
-                        filename.bright_cyan(),
-                        "Reading...".bright_green()
-                    );
+                    println!("File {} exists. {}", filename.cyan(), "Reading...".green());
                     if let Ok(lines) = read_lines(&filename) {
                         // Iterate through lines and process YAML and Markdown content.
                         for line in lines.map_while(Result::ok) {
@@ -300,14 +454,10 @@ impl PDFComposer {
                     // Check if YAML is valid.
                     // If file exists, but is not a suitable yaml markdown file, early exit break
                     if rayon_yaml_delimiter_count == 0 || yaml == Value::Null {
-                        println!("File {} is not a valid yaml file", filename.bright_red());
+                        println!("File {} is not a valid yaml file", filename.red());
                         break 'file_found;
                     } else {
-                        println!(
-                            "{}. {}",
-                            filename.bright_cyan(),
-                            "Processing...".bright_green()
-                        );
+                        println!("{}. {}", filename.cyan(), "Processing...".green());
                     }
 
                     // Convert YAML Front Matter to a BTreeMap.
@@ -322,22 +472,30 @@ impl PDFComposer {
                     // markdown:: comes from the markdown crate
                     let html: String = markdown::to_html(&merged_markdown_yaml.to_owned());
 
+                    let instance_data = PDFBuilder {
+                        source_file: filename.to_string(),
+                        output_directory: self.output_directory.to_path_buf(),
+                        pdf_version: self.pdf_version,
+                        paper_size: self.paper_size,
+                        orientation: self.orientation,
+                        margins: self.margins,
+                        font: self.font,
+                    };
+
                     // Build the PDF document.
                     let _ = build_pdf(
                         html,
-                        filename.to_string(),
                         yaml_btreemap,
-                        self.output_directory.to_path_buf(),
                         <std::option::Option<
                             std::collections::BTreeMap<std::string::String, std::string::String>,
                         > as Clone>::clone(&self.pdf_document_entries)
                         .unwrap(),
-                        self.pdf_version,
+                        instance_data,
                     );
                 }
                 Err(_) => {
                     // File not found, print error message.
-                    println!("File {} not found.", filename.bright_red());
+                    println!("File {} not found.", filename.red());
                 }
             }
         });

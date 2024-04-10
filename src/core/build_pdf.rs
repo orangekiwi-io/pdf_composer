@@ -9,22 +9,26 @@ use std::fs::{create_dir_all, OpenOptions};
 use std::io;
 use std::path::{Path, PathBuf};
 
+use crate::core::fonts::GetCssName;
+use crate::core::page_properties::ToDimensions;
+use crate::core::PaperOrientation;
 use crate::utils::extract_to_end_string;
-use crate::{PDFVersion, CHECK_MARK, CROSS_MARK};
+use crate::{FontsStandard, PDFVersion, PaperSize, CHECK_MARK, CROSS_MARK};
 use async_std::task;
 use chromiumoxide::{cdp::browser_protocol::page::PrintToPdfParams, Browser, BrowserConfig};
 use futures::StreamExt;
 
-/// This function generates a PDF document from a given HTML string, source file, YAML data, output directory, dictionary entries, and PDF version.
+use super::page_properties::PageMargins;
+
+/// This function generates a PDF document from a given HTML string, source file and YAML data.
+/// It also all updated dictionary entries, PDF version, paper size, paper orientation sets margins and the font before writing PDFs to the output directory.
 ///
 /// # Arguments
 ///
 /// * `generated_html` - A `String` containing the HTML content to be converted to PDF.
-/// * `source_file` - A `String` representing the path to the source file (e.g., Markdown file) from which the HTML was generated.
 /// * `yaml_btreemap` - A `BTreeMap<String, Value>` containing the YAML data.
-/// * `output_directory` - A `PathBuf` representing the directory where the PDF file should be saved.
 /// * `dictionary_entries` - A `BTreeMap<String, String>` containing key-value pairs to be added or updated in the PDF document's metadata dictionary.
-/// * `pdf_version` - A `PDFVersion` enum value specifying the version of the PDF document.
+/// * `instance_data` - An object containing the smaller data about the PDF (orientation, source_file, output_directory, pdf_version, paper_size, margins, font).
 ///
 /// # Returns
 ///
@@ -35,26 +39,45 @@ use futures::StreamExt;
 ///
 /// This function performs the following tasks:
 ///
-/// 1. Launches a Chromium browser instance using the `Browser::launch` method.
+/// 1. Launches a Headless Chromium browser instance using the `Browser::launch` method.
 /// 2. Constructs the HTML content by combining the generated HTML with a basic HTML structure and encoding it for URL safety.
 /// 3. Creates a new browser page and navigates to the HTML content.
 /// 4. Converts the page content to PDF format using the `page.pdf` method.
 /// 5. Creates a new `Document` object from the PDF data using the `Document::load_mem` method.
 /// 6. Updates the PDF document version based on the provided `pdf_version`.
-/// 7. Iterates over the objects in the PDF document and updates the "Creator" and "Producer" metadata entries, if present.
-/// 8. If the "Creator" metadata entry is found, adds or updates the PDF document's metadata properties based on the `dictionary_entries`.
-/// 9. Saves the modified PDF document to the specified output directory with a filename derived from the source file.
-/// 10. Displays a success message with the path to the generated PDF file and the updated metadata properties.
+/// 7. Sets the paper size `paper_size`
+/// 8. Sets the paper margins `margins`
+/// 9. Sets the PDF font `font`
+/// 10. Set the orientation for the paper `orientation`
+/// 11. Iterates over the objects in the PDF document and updates the "Creator" and "Producer" metadata entries, if present.
+/// 12. If the "Creator" metadata entry is found, adds or updates the PDF document's metadata properties based on the `dictionary_entries`.
+/// 13. Saves the modified PDF document to the specified output directory with a filename derived from the source file.
+/// 14. Displays a success message with the path to the generated PDF file and the updated metadata properties.
 ///
 /// The function handles cases where the PDF file is already open by another process and prints an error message if an error occurs during the process.
 pub fn build_pdf(
     generated_html: String,
-    source_file: String,
     yaml_btreemap: BTreeMap<String, Value>,
-    output_directory: PathBuf,
     dictionary_entries: BTreeMap<String, String>,
-    pdf_version: PDFVersion,
+    instance_data: PDFBuilder,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    // Destructure instance_data (PDFBuilder struct)
+    let PDFBuilder {
+        orientation,
+        source_file,
+        output_directory,
+        pdf_version,
+        paper_size,
+        margins,
+        font,
+    } = instance_data;
+
+    // Set page size for all PDF documents based on orientation.
+    let (page_width, page_height) = match orientation {
+        PaperOrientation::Landscape => (paper_size.to_dimensions().1, paper_size.to_dimensions().0),
+        PaperOrientation::Portrait => paper_size.to_dimensions(),
+    };
+
     task::block_on(async {
         // Remove the markdown, md, file extension
         let filename_path = source_file.trim_end_matches(".md");
@@ -76,6 +99,19 @@ pub fn build_pdf(
             }
         });
 
+        // TODO RL Template this? External file?
+        // Set CSS @media print media query and @page property for pages
+        let mut css_page = String::from("<style>\n@media print {\n ");
+        let (css_font_name, css_font_weight, css_font_style) = font.get_css_name();
+        let css_font = format!(
+            "body {{ font-family: {}; font-weight: {}; font-style: {} }}\n\n",
+            css_font_name, css_font_weight, css_font_style
+        );
+        let css_at_page = format!("@page {{\nsize: {}in {}in;\n}}", page_width, page_height);
+        css_page.push_str(&css_font);
+        css_page.push_str(&css_at_page);
+        css_page.push_str("\n}\n</style>");
+
         // Set the title String to either the yaml 'title' entry,
         // or (if there is no 'title' entry), the filename of the source file in question
         let title_string = yaml_btreemap
@@ -83,8 +119,12 @@ pub fn build_pdf(
             .and_then(|value| value.as_str())
             .unwrap_or(&extracted_filename_as_string);
         let mut html_string = String::new();
-        let html_before_string = format!("<html><head><title>{}</title><head><body>", title_string);
+        let html_before_string = format!(
+            "<html><head><title>{}</title>{}</head><body>",
+            title_string, css_page
+        );
         let html_after_string = "</body></html>";
+
         // Encode the HTML content to URL-safe format
         // url_escape:: comes from the url_escape crate
         url_escape::encode_query_to_string(generated_html, &mut html_string);
@@ -114,7 +154,27 @@ pub fn build_pdf(
         let _html = page.wait_for_navigation().await?.content().await?;
 
         // Convert the page to PDF format
-        let pdf = page.pdf(PrintToPdfParams::default()).await?;
+        let paper_settings = PrintToPdfParams {
+            // landscape: todo!(),
+            // display_header_footer: todo!(),
+            // print_background: todo!(),
+            // scale: todo!(),
+            paper_width: Some(page_width),
+            paper_height: Some(page_height),
+            margin_top: Some(margins[0]),
+            margin_right: Some(margins[1]),
+            margin_bottom: Some(margins[2]),
+            margin_left: Some(margins[3]),
+            // page_ranges: todo!(),
+            // header_template: todo!(),
+            // footer_template: todo!(),
+            prefer_css_page_size: Some(true),
+            // transfer_mode: todo!(),
+            ..Default::default()
+        };
+
+        // let pdf = page.pdf(PrintToPdfParams::default()).await?;
+        let pdf = page.pdf(paper_settings).await?;
 
         // Create a new PDF document
         let mut doc: Document = Document::load_mem(&pdf)?;
@@ -190,7 +250,7 @@ pub fn build_pdf(
             + "\n";
         error_message.push_str(
             "Failed to save modified PDF document."
-                .bright_red()
+                .red()
                 .to_string()
                 .as_str(),
         );
@@ -203,7 +263,7 @@ pub fn build_pdf(
                 println!(
                     "\n{}{} → {}",
                     CHECK_MARK.to_string().green(),
-                    source_file.bright_green(),
+                    source_file.green(),
                     pdf_file_path_as_string.yellow()
                 );
                 println!("{}", "PDF document metadata properties".yellow());
@@ -222,6 +282,24 @@ pub fn build_pdf(
 
         Ok(())
     })
+}
+
+/// PDFBuilder Struct for passing data into the build_pdf function
+pub struct PDFBuilder {
+    /// `source_file` - A `String` representing the path to the source file (e.g., Markdown file) from which the HTML was generated.
+    pub source_file: String,
+    /// `output_directory` - A `PathBuf` representing the directory where the PDF file should be saved.
+    pub output_directory: PathBuf,
+    /// `pdf_version` - A `PDFVersion` enum value specifying the version of the PDF document.
+    pub pdf_version: PDFVersion,
+    /// `paper_size` - The paper size for the PDF document.
+    pub paper_size: PaperSize,
+    /// `orientation` - The orientation (landscape or portrait) of the paper for the PDF document.
+    pub orientation: PaperOrientation,
+    /// `margins` - Page margins.
+    pub margins: PageMargins,
+    /// `font` - The font to be used for the PDF document.
+    pub font: FontsStandard,
 }
 
 /// This function populates a dictionary (BTreeMap) with a key-value pair.
