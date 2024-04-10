@@ -209,14 +209,38 @@ impl PDFComposer {
     /// my_pdf_doc.set_margins("20");
     /// ```
     pub fn set_margins(&mut self, margins: &str) {
-        let margins_vector: Vec<&str> = margins.split(' ').collect();
+        // println!("{} {}", "margins:".cyan(), margins);
+        // Trim (remove) white space from both ends of the margins string
+        let mut margins_vector: Vec<&str> = margins.trim().split(' ').collect();
+        // Remove all empty elements in the margins vector
+        margins_vector.retain(|ele| !ele.is_empty());
+        // println!(
+        //     "{} {:?}",
+        //     "margins_vector:".cyan(),
+        //     margins_vector.to_owned()
+        // );
 
         // Check to see if there are any non-integer entries for margin values
         // If there are, then set any_letters_found to true and set all margins to default size
-        let any_letters_found = margins_vector.iter().any(|&x| x.parse::<u32>().is_err());
+        let any_letters_found = margins_vector
+            .iter()
+            .any(|&ele| ele.parse::<u32>().is_err());
 
         if any_letters_found {
             self.margins = [DEFAULT_MARGIN / MM_TO_INCH; 4];
+            let troublesome_margins: String = margins_vector.join(", ");
+            let margin_error_message = "".to_owned()
+                + &CROSS_MARK.red().to_string()
+                + &"Something wrong with the margin values provided "
+                    .red()
+                    .to_string()
+                + &"[".yellow().to_string()
+                + &troublesome_margins.yellow().to_string()
+                + &"]".yellow().to_string()
+                + "\nUsing the default value of "
+                + &DEFAULT_MARGIN.to_string()
+                + "mm for the margins.\n";
+            eprintln!("{}", margin_error_message);
         } else {
             self.margins = match margins_vector.len() {
                 1 => {
@@ -250,6 +274,8 @@ impl PDFComposer {
                 _ => [DEFAULT_MARGIN / MM_TO_INCH; 4],
             }
         };
+
+        // println!("{:#?}", self.margins);
     }
 
     /// Adds source files to the PDFComposer instance for processing.
@@ -373,8 +399,8 @@ impl PDFComposer {
                     // File exists, proceed with reading.
                     println!(
                         "File {} exists. {}",
-                        filename.bright_cyan(),
-                        "Reading...".bright_green()
+                        filename.cyan(),
+                        "Reading...".green()
                     );
                     if let Ok(lines) = read_lines(&filename) {
                         // Iterate through lines and process YAML and Markdown content.
@@ -406,13 +432,13 @@ impl PDFComposer {
                     // Check if YAML is valid.
                     // If file exists, but is not a suitable yaml markdown file, early exit break
                     if rayon_yaml_delimiter_count == 0 || yaml == Value::Null {
-                        println!("File {} is not a valid yaml file", filename.bright_red());
+                        println!("File {} is not a valid yaml file", filename.red());
                         break 'file_found;
                     } else {
                         println!(
                             "{}. {}",
-                            filename.bright_cyan(),
-                            "Processing...".bright_green()
+                            filename.cyan(),
+                            "Processing...".green()
                         );
                     }
 
@@ -446,7 +472,7 @@ impl PDFComposer {
                 }
                 Err(_) => {
                     // File not found, print error message.
-                    println!("File {} not found.", filename.bright_red());
+                    println!("File {} not found.", filename.red());
                 }
             }
         });
