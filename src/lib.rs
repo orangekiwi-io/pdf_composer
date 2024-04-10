@@ -19,7 +19,7 @@ use utils::{merge_markdown_yaml, read_lines, yaml_mapping_to_btreemap};
 
 pub mod core;
 use core::build_pdf;
-pub use core::{PaperOrientation, PaperSize};
+pub use core::{FontsStandard, PaperOrientation, PaperSize};
 
 /// CONST for a tick/check mark character plus a space character
 pub const CHECK_MARK: &str = "\u{2713} ";
@@ -45,6 +45,8 @@ pub struct PDFComposer {
     orientation: PaperOrientation,
     /// Set the margins for the pages
     margins: [f64; 4],
+    /// Set the for the PDF document
+    font: FontsStandard,
 }
 
 impl fmt::Debug for PDFComposer {
@@ -58,6 +60,7 @@ impl fmt::Debug for PDFComposer {
             .field("paper_size", &self.paper_size)
             .field("orientation", &self.orientation)
             .field("margins", &&self.margins)
+            .field("font", &&self.font)
             .finish()
     }
 }
@@ -123,6 +126,7 @@ impl PDFComposer {
             paper_size: PaperSize::A4,
             orientation: PaperOrientation::Portrait,
             margins: [DEFAULT_MARGIN / MM_TO_INCH; 4],
+            font: FontsStandard::Helvetica,
         }
     }
 
@@ -193,6 +197,23 @@ impl PDFComposer {
     /// ```
     pub fn set_orientation(&mut self, orientation: PaperOrientation) {
         self.orientation = orientation;
+    }
+
+    /// Sets the font for the PDF.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use pdf_composer::PDFComposer;
+    ///
+    /// // Create a new PDF generator instance
+    /// let mut my_pdf_doc = PDFComposer::new();
+    ///
+    /// // Set the font to Times Roman
+    /// my_pdf_doc.set_font(FontsStandard::TimesRoman);
+    /// ```
+    pub fn set_font(&mut self, font: FontsStandard) {
+        self.font = font;
     }
 
     /// Sets the page margins.
@@ -468,6 +489,7 @@ impl PDFComposer {
                         self.paper_size,
                         self.orientation,
                         self.margins,
+                        self.font,
                     );
                 }
                 Err(_) => {

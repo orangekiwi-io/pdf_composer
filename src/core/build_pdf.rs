@@ -10,9 +10,10 @@ use std::io;
 use std::path::{Path, PathBuf};
 
 use crate::core::page_properties::ToDimensions;
+use crate::core::fonts::GetCssName;
 use crate::utils::extract_to_end_string;
 use crate::{
-    core::{PaperOrientation, PaperSize},
+    core::{FontsStandard, PaperOrientation, PaperSize},
     PDFVersion, CHECK_MARK, CROSS_MARK,
 };
 use async_std::task;
@@ -32,6 +33,7 @@ use futures::StreamExt;
 /// * `paper_size` - The paper size for the PDF document.
 /// * `orientation` - The orientation (landscape or portrait) of the paper for the PDF document.
 /// * `margins` - Page margins.
+/// * `font` - The font to be used for the PDF document.
 ///
 /// # Returns
 ///
@@ -64,12 +66,13 @@ pub fn build_pdf(
     paper_size: PaperSize,
     orientation: PaperOrientation,
     margins: [f64; 4],
+    font: FontsStandard,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    // Set page size for all PDF documents based on orientation.
     let (page_width, page_height) = match orientation {
         PaperOrientation::Landscape => (paper_size.to_dimensions().1, paper_size.to_dimensions().0),
         PaperOrientation::Portrait => paper_size.to_dimensions(),
     };
-    // println!("{} {:#?}", "margins:".cyan(), margins);
 
     task::block_on(async {
         // Remove the markdown, md, file extension
@@ -93,10 +96,14 @@ pub fn build_pdf(
         });
 
         // TODO RL Template this? External file?
-        // Set CSS @page property for paper size
-        let mut css_page = String::from("<style>\n@media print {\n @page {\nsize: ");
-        css_page.push_str(&format!("{}in {}in;", page_width, page_height));
-        css_page.push_str("\n}\n}\n</style>");
+        // Set CSS @media print and @page property for pages
+        let mut css_page = String::from("<style>\n@media print {\n ");
+        let (css_font_name, css_font_weight, css_font_style) = font.get_css_name();
+        let css_font = format!("body {{ font-family: {}; font-weight: {}; font-style: {} }}\n\n", css_font_name, css_font_weight, css_font_style);
+        let css_at_page = format!("@page {{\nsize: {}in {}in;\n}}", page_width, page_height);
+        css_page.push_str(&css_font);
+        css_page.push_str(&css_at_page);
+        css_page.push_str("\n}\n</style>");
 
         // Set the title String to either the yaml 'title' entry,
         // or (if there is no 'title' entry), the filename of the source file in question

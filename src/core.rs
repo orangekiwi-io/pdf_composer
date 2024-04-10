@@ -10,3 +10,8 @@ pub use build_pdf::build_pdf;
 mod page_properties;
 /// Re-exports the `PaperSize` enum for public use.
 pub use page_properties::{PaperSize, PaperOrientation};
+
+/// The `fonts` module contains enums, traits, structs and functions related to font for PDF documents
+mod fonts;
+/// Re-exports the `FontsStandard` enum for public use.
+pub use fonts::FontsStandard;
