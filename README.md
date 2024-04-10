@@ -286,7 +286,6 @@ The project is licensed under the terms of both the MIT license and the Apache L
 ## Future plans
 
 Some ideas, but not limited to:
-* Set paper sizes, orientation and margins
 * HTML templates
 * Pretty default print stylesheets
 * Allow for direct String values to be used for PDF Dictionary entries without having to have a YAML value first
