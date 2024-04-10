@@ -240,7 +240,7 @@ pub fn build_pdf(
             + "\n";
         error_message.push_str(
             "Failed to save modified PDF document."
-                .bright_red()
+                .red()
                 .to_string()
                 .as_str(),
         );
@@ -253,7 +253,7 @@ pub fn build_pdf(
                 println!(
                     "\n{}{} → {}",
                     CHECK_MARK.to_string().green(),
-                    source_file.bright_green(),
+                    source_file.green(),
                     pdf_file_path_as_string.yellow()
                 );
                 println!("{}", "PDF document metadata properties".yellow());
