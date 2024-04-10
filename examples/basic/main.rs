@@ -37,7 +37,7 @@ fn main() {
     // Set the paper orientation. Default to PaperOrientation::Portrait
     bob.set_orientation(PaperOrientation::Landscape);
 
-    // Set the page margins. Defaults to 10
+    // Set the page margins (mm). Defaults to 10 (mm)
     bob.set_margins("20");
 
     // Set font. Defaults to FontsStandard::Helvetica
