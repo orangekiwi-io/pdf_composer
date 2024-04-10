@@ -5,7 +5,9 @@
 //!
 //! This file is an example usage of the PDF Composer crate.
 //!
-use pdf_composer::{PaperSize, PDFComposer, PDFDocInfoEntry, PDFVersion};
+use pdf_composer::{
+    FontsStandard, PDFComposer, PDFDocInfoEntry, PDFVersion, PaperOrientation, PaperSize,
+};
 use std::path::PathBuf;
 
 fn main() {
@@ -26,11 +28,20 @@ fn main() {
     // PDF version (not the version of the document, but the Adobe (formerly) PDF format version)
     bob.set_pdf_version(PDFVersion::V2_0);
 
+    // Output directory for the generated PDFs
+    bob.set_output_directory("examples/basic/output_pdfs_a6");
+
     // Defaults to PaperSize::A4 if no PaperSize provided
     bob.set_paper_size(PaperSize::A6);
 
-    // Output directory for the generated PDFs
-    bob.set_output_directory("examples/basic/output_pdfs_a6");
+    // Set the paper orientation. Default to PaperOrientation::Portrait
+    bob.set_orientation(PaperOrientation::Landscape);
+
+    // Set the page margins. Defaults to 10
+    bob.set_margins("20");
+
+    // Set font. Defaults to FontsStandard::Helvetica
+    bob.set_font(FontsStandard::TimesRoman);
 
     // Metadata for the PDFs
     // Title property set via the HTML template <title> tag
