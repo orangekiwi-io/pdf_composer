@@ -29,7 +29,9 @@ pub const CHECK_MARK: &str = "\u{2713} ";
 /// CONST for a cross character plus a space character
 pub const CROSS_MARK: &str = "\u{2717} ";
 
+// Default margin is 10mm
 const DEFAULT_MARGIN: f64 = 10.0;
+// Convert mm to inches
 const MM_TO_INCH: f64 = 25.4;
 
 /// PDFComposer struct represents a tool for composing PDF documents from multiple source files.
