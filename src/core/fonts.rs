@@ -1,19 +1,33 @@
 /// Enum representing the standard 14 PostScript fonts available to use in PDF documents
 #[derive(Clone, Copy, Debug)]
 pub enum FontsStandard {
+    /// Courier font
     Courier,
+    /// Courier font bold
     CourierBold,
+    /// Courier font bold and italic
     CourierBoldOblique,
+    /// Courier font italic
     CourierOblique,
+    /// Helvetica
     Helvetica,
+    /// Helvetica font bold
     HelveticaBold,
+    /// Helvetica font bold and italic
     HelveticaBoldOblique,
+    /// Helvetica font italic
     HelveticaOblique,
+    /// Symbol font
     Symbol,
+    /// Times font bold
     TimesBold,
+    /// Times font bold and italic
     TimesBoldItalic,
+    /// Times font italic
     TimesItalic,
+    /// Times Roman font
     TimesRoman,
+    /// Zapf Dingbats font
     ZapfDingbats,
 }
 

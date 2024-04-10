@@ -17,9 +17,12 @@ use std::{collections::BTreeMap, fmt, fs, path::PathBuf, process};
 mod utils;
 use utils::{merge_markdown_yaml, read_lines, yaml_mapping_to_btreemap};
 
+/// The 'core' module containing the main functions for PDF Composer
 pub mod core;
-use core::build_pdf;
+use core::{build_pdf, PageMargins};
 pub use core::{FontsStandard, PaperOrientation, PaperSize};
+
+use crate::core::build_pdf::PDFBuilder;
 
 /// CONST for a tick/check mark character plus a space character
 pub const CHECK_MARK: &str = "\u{2713} ";
@@ -44,7 +47,7 @@ pub struct PDFComposer {
     /// Specifies the orientation of the page.
     orientation: PaperOrientation,
     /// Set the margins for the pages
-    margins: [f64; 4],
+    margins: PageMargins,
     /// Set the for the PDF document
     font: FontsStandard,
 }
@@ -475,21 +478,32 @@ impl PDFComposer {
                     // markdown:: comes from the markdown crate
                     let html: String = markdown::to_html(&merged_markdown_yaml.to_owned());
 
+                    let instance_data = PDFBuilder {
+                        source_file: filename.to_string(),
+                        output_directory: self.output_directory.to_path_buf(),
+                        pdf_version: self.pdf_version,
+                        paper_size: self.paper_size,
+                        orientation: self.orientation,
+                        margins: self.margins,
+                        font: self.font,
+                    };
+
                     // Build the PDF document.
                     let _ = build_pdf(
                         html,
-                        filename.to_string(),
+                        // filename.to_string(),
                         yaml_btreemap,
-                        self.output_directory.to_path_buf(),
+                        // self.output_directory.to_path_buf(),
                         <std::option::Option<
                             std::collections::BTreeMap<std::string::String, std::string::String>,
                         > as Clone>::clone(&self.pdf_document_entries)
                         .unwrap(),
-                        self.pdf_version,
-                        self.paper_size,
-                        self.orientation,
-                        self.margins,
-                        self.font,
+                        // self.pdf_version,
+                        // self.paper_size,
+                        // self.orientation,
+                        // self.margins,
+                        // self.font,
+                        instance_data,
                     );
                 }
                 Err(_) => {

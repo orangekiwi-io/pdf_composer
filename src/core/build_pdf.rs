@@ -9,16 +9,16 @@ use std::fs::{create_dir_all, OpenOptions};
 use std::io;
 use std::path::{Path, PathBuf};
 
-use crate::core::page_properties::ToDimensions;
 use crate::core::fonts::GetCssName;
+use crate::core::page_properties::ToDimensions;
+use crate::core::PaperOrientation;
 use crate::utils::extract_to_end_string;
-use crate::{
-    core::{FontsStandard, PaperOrientation, PaperSize},
-    PDFVersion, CHECK_MARK, CROSS_MARK,
-};
+use crate::{FontsStandard, PDFVersion, PaperSize, CHECK_MARK, CROSS_MARK};
 use async_std::task;
 use chromiumoxide::{cdp::browser_protocol::page::PrintToPdfParams, Browser, BrowserConfig};
 use futures::StreamExt;
+
+use super::page_properties::PageMargins;
 
 /// This function generates a PDF document from a given HTML string, source file, YAML data, output directory, dictionary entries, and PDF version.
 ///
@@ -58,16 +58,27 @@ use futures::StreamExt;
 /// The function handles cases where the PDF file is already open by another process and prints an error message if an error occurs during the process.
 pub fn build_pdf(
     generated_html: String,
-    source_file: String,
+    // source_file: String,
     yaml_btreemap: BTreeMap<String, Value>,
-    output_directory: PathBuf,
+    // output_directory: PathBuf,
     dictionary_entries: BTreeMap<String, String>,
-    pdf_version: PDFVersion,
-    paper_size: PaperSize,
-    orientation: PaperOrientation,
-    margins: [f64; 4],
-    font: FontsStandard,
+    // pdf_version: PDFVersion,
+    // paper_size: PaperSize,
+    // orientation: PaperOrientation,
+    // margins: [f64; 4],
+    // font: FontsStandard,
+    instance_data: PDFBuilder,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    // Destructure instance_data (PDFBuilder struct)
+    let PDFBuilder {
+        orientation,
+        source_file,
+        output_directory,
+        pdf_version,
+        paper_size,
+        margins,
+        font,
+    } = instance_data;
     // Set page size for all PDF documents based on orientation.
     let (page_width, page_height) = match orientation {
         PaperOrientation::Landscape => (paper_size.to_dimensions().1, paper_size.to_dimensions().0),
@@ -99,7 +110,10 @@ pub fn build_pdf(
         // Set CSS @media print and @page property for pages
         let mut css_page = String::from("<style>\n@media print {\n ");
         let (css_font_name, css_font_weight, css_font_style) = font.get_css_name();
-        let css_font = format!("body {{ font-family: {}; font-weight: {}; font-style: {} }}\n\n", css_font_name, css_font_weight, css_font_style);
+        let css_font = format!(
+            "body {{ font-family: {}; font-weight: {}; font-style: {} }}\n\n",
+            css_font_name, css_font_weight, css_font_style
+        );
         let css_at_page = format!("@page {{\nsize: {}in {}in;\n}}", page_width, page_height);
         css_page.push_str(&css_font);
         css_page.push_str(&css_at_page);
@@ -279,6 +293,17 @@ pub fn build_pdf(
 
         Ok(())
     })
+}
+
+/// PDFBuilder Struct for passing data into the build_pdf function
+pub struct PDFBuilder {
+    pub source_file: String,
+    pub output_directory: PathBuf,
+    pub pdf_version: PDFVersion,
+    pub paper_size: PaperSize,
+    pub orientation: PaperOrientation,
+    pub margins: PageMargins,
+    pub font: FontsStandard,
 }
 
 /// This function populates a dictionary (BTreeMap) with a key-value pair.
