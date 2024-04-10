@@ -423,11 +423,7 @@ impl PDFComposer {
             match fs::metadata(filename.clone()) {
                 Ok(_) => 'file_found: {
                     // File exists, proceed with reading.
-                    println!(
-                        "File {} exists. {}",
-                        filename.cyan(),
-                        "Reading...".green()
-                    );
+                    println!("File {} exists. {}", filename.cyan(), "Reading...".green());
                     if let Ok(lines) = read_lines(&filename) {
                         // Iterate through lines and process YAML and Markdown content.
                         for line in lines.map_while(Result::ok) {
@@ -461,11 +457,7 @@ impl PDFComposer {
                         println!("File {} is not a valid yaml file", filename.red());
                         break 'file_found;
                     } else {
-                        println!(
-                            "{}. {}",
-                            filename.cyan(),
-                            "Processing...".green()
-                        );
+                        println!("{}. {}", filename.cyan(), "Processing...".green());
                     }
 
                     // Convert YAML Front Matter to a BTreeMap.
@@ -493,18 +485,11 @@ impl PDFComposer {
                     // Build the PDF document.
                     let _ = build_pdf(
                         html,
-                        // filename.to_string(),
                         yaml_btreemap,
-                        // self.output_directory.to_path_buf(),
                         <std::option::Option<
                             std::collections::BTreeMap<std::string::String, std::string::String>,
                         > as Clone>::clone(&self.pdf_document_entries)
                         .unwrap(),
-                        // self.pdf_version,
-                        // self.paper_size,
-                        // self.orientation,
-                        // self.margins,
-                        // self.font,
                         instance_data,
                     );
                 }
