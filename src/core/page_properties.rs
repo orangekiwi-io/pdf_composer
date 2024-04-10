@@ -104,7 +104,7 @@ type PageUnit = f64;
 pub type PageMargins = [PageUnit; 4];
 
 /// Trait to extract the width and height of the paper size from the `PaperSize` chosen
-pub (crate) trait ToDimensions {
+pub(crate) trait ToDimensions {
     fn to_dimensions(&self) -> (PageUnit, PageUnit);
 }
 
