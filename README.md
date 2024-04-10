@@ -9,12 +9,12 @@ This crate creates a PDF document from YAML Front Matter source documents. The Y
 ### PDF output destination
 Generated PDFs are saved to an output destination directory relative to your project root.
 
-If no output destination is set, then PDFs will be saved in a directory called `pdf_composer_pdfs`. This stops the root of your project being littered with generated PDFs. Nice and tidy.
+For example, `my_pdf_instance.set_output_directory("output_pdfs")`. If no output destination is set, then PDFs will be saved in a directory called `pdf_composer_pdfs`. This stops the root of your project being littered with generated PDFs. Nice and tidy.
 
 ### PDF versions
-Currently only the latest two versions of the PDF specifications are supported (and encouraged), namely versions 1.7 and 2.0.
+Currently only the latest two versions of the PDF specifications are supported (and encouraged), namely versions `1.7` and `2.0`.
 
-If not PDF version is set, then version 1.7 is used by default.
+For example, `my_pdf_instance.set_pdf_version(PDFVersion::V2_0)`. If no PDF version is set, then version `1.7` is used by default.
 
 **NOTE:** This is not to be confused with the version/edition of the PDF itself. That is something for you to decide (and maybe set as a YAML value for inclusion as a PDF Dictionary entry, see below for more information).
 
@@ -26,7 +26,7 @@ To set the version see the table showing the corresponding enum with version num
 | PDFVersion::V2_0 | 2.0 |
 
 ### Paper sizes
-List of supported paper sizes:
+List of supported paper sizes. For example, `my_pdf_instance.set_paper_size(PaperSize::A5)`. If no paper size is set, the paper size defaults to `A4`.
 
 #### ISO 216 A series paper sizes
 
@@ -87,9 +87,64 @@ List of supported paper sizes:
 | B9  | 45 x 64 mm     | 1.8 x 2.5 in   |
 | B10 | 32 x 45 mm     | 1.3 x 1.8 in   |
 
+### Paper orientation
+
+This allows the PDF document pages to be saved as landscape or portrait orientation. For example, `my_pdf_instance.set_orientation(PaperOrientation::Landscape)`. If not orientation is set, the the default is `Portrait`.
+
 ### Page margins
 
-Set the page margins using CSS notation... explain.
+The unit used for margins is millimeters (mm). If not margins set, the default margin size is `10`.
+
+Set the page margins using CSS shorthand notation (top right bottom left). This means:
+
+One value set, then all four margins will get that value. For example, `my_pdf_instance.set_margins("20")` will result in the following:
+* margin-top: 20,
+* margin-right: 20,
+* margin-bottom: 20,
+* margin-left: 20
+
+Two values set, then the top and bottom margins will get the first value, the right and left margins will get the second value. For example, `my_pdf_instance.set_margins("20 15")` will result in the following:
+* margin-top: 20,
+* margin-right: 15,
+* margin-bottom: 20,
+* margin-left: 15
+
+Three values set, then the top margin will get the first value, the right and left margins will get the second value, the bottom margin will the the third value. For example, `my_pdf_instance.set_margins("20 15 30")` will result in the following:
+* margin-top: 20,
+* margin-right: 15,
+* margin-bottom: 30,
+* margin-left: 15
+
+Four values set, then the top margin will get the first value, the right will get the second value, the bottom margin will the the third value, the left will get the forth value. For example, `my_pdf_instance.set_margins("20 15 30 5")` will result in the following:
+* margin-top: 20,
+* margin-right: 15,
+* margin-bottom: 30,
+* margin-left: 5
+
+If any other values (or non-integer number, letters, characters etc) are set, the the default value of `10` will be set for each margin.
+
+### Page font
+
+One of 14 standard fonts can be used for PDF documents. These are:
+
+| Enum | Font name | Font weight | Font style |
+|---|---|---|---|
+| Courier              | Courier       | Normal | Normal  |
+| CourierBold          | Courier       | Bold   | Normal  |
+| CourierBoldOblique   | Courier       | Bold   | Oblique |
+| CourierOblique       | Courier       | Normal | Oblique |
+| Helvetica            | Helvetica     | Normal | Normal  |
+| HelveticaBold        | Helvetica     | Bold   | Normal  |
+| HelveticaBoldOblique | Helvetica     | Bold   | Oblique |
+| HelveticaOblique     | Helvetica     | Normal | Oblique |
+| Symbol               | Symbol        | Normal | Normal  |
+| TimesBold            | Times         | Bold   | Normal  |
+| TimesBoldItalic      | Times         | Bold   | Italic  |
+| TimesItalic          | Times         | Normal | Italic  |
+| TimesRoman           | Times         | Normal | Normal  |
+| ZapfDingbats         | Zapf Dingbats | Normal | Normal  |
+
+For example, `my_pdf_instance.set_font(FontsStandard::TimesRoman)`. If no font is set, the font defaults to `Helvetica`.
 
 ## PDF Dictionary entries
 
@@ -164,7 +219,7 @@ The result will be: `The author of this document is {{name}}.`
 Assuming you have Rust up and running (tested with rust verion `1.76+`) and you have run `cargo add pdf_composer` to install the **PDF Composer** crate, then you can begin.
 
 ```rust
-use pdf_composer::{PDFComposer, PDFDocInfoEntry, PDFVersion};
+use pdf_composer::{FontsStandard, PaperOrientation, PaperSize, PDFComposer, PDFDocInfoEntry, PDFVersion};
 
 // Create a new PDFComposer instance
 let mut my_pdf_instance = PDFComposer::new();
@@ -181,6 +236,18 @@ my_pdf_instance.set_pdf_version(PDFVersion::V2_0);
 
 // Output directory for the generated PDFs
 my_pdf_instance.set_output_directory("example_pdfs");
+
+// Set the paper size
+my_pdf_instance.set_paper_size(PaperSize::A5);
+
+// Set the paper orientation
+my_pdf_instance.set_orientation(PaperOrientation::Landscape);
+
+// Set the page margins
+my_pdf_instance.set_margins("20");
+
+// Set font
+my_pdf_instance.set_font(FontsStandard::TimesRoman);
 
 // Metadata for the PDFs
 let author_entry = PDFDocInfoEntry {
