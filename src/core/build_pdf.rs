@@ -82,7 +82,7 @@ pub fn build_pdf(
         // Remove the markdown, md, file extension
         let filename_path = source_file.trim_end_matches(".md");
         // Extract only the file name
-        let extracted_filename = extract_to_end_string(filename_path, '/');
+        let extracted_filename = extract_to_end_string(filename_path);
         let extracted_filename_as_string = extracted_filename.unwrap().to_string();
 
         let mut string_values_btreemap: BTreeMap<String, String> = BTreeMap::new();
@@ -129,7 +129,6 @@ pub fn build_pdf(
         // url_escape:: comes from the url_escape crate
         url_escape::encode_query_to_string(generated_html, &mut html_string);
 
-        create_dir_all(&output_directory)?;
         let mut pdf_file = extracted_filename_as_string;
         pdf_file.push_str(".pdf");
 
@@ -179,6 +178,9 @@ pub fn build_pdf(
         // Create a new PDF document
         let mut doc: Document = Document::load_mem(&pdf)?;
         doc.version = pdf_version.to_string();
+
+        doc.compress();
+        create_dir_all(pdf_file_path.parent().unwrap())?;
         doc.save(pdf_file_path.clone()).unwrap();
 
         #[allow(unused_variables)]
