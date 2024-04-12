@@ -11,8 +11,14 @@
 
 use colored::Colorize;
 use rayon::prelude::*;
+use regex::Regex;
 use serde_yaml::Value;
-use std::{collections::BTreeMap, fmt, fs, path::PathBuf, process};
+use std::{
+    collections::BTreeMap,
+    fmt, fs,
+    path::{PathBuf, MAIN_SEPARATOR_STR},
+    process,
+};
 
 mod utils;
 use utils::{merge_markdown_yaml, read_lines, yaml_mapping_to_btreemap};
@@ -325,7 +331,27 @@ impl PDFComposer {
     /// my_pdf_doc.add_source_files(source_files);
     /// ```
     pub fn add_source_files(&mut self, paths: Vec<PathBuf>) {
-        self.fmy_source_files.extend(paths);
+        let regex = Regex::new(r"(?m)\\").unwrap();
+
+        // Normalize the paths to be OS compliant
+        let normalized_paths: Vec<PathBuf> = paths
+            .iter()
+            .map(|p| {
+                // Normalize the paths to be OS compliant
+                let is_windows = cfg!(target_os = "windows");
+                // Convert the path separator based on the platform
+                let os_compliant_path = if is_windows {
+                    p.display()
+                        .to_string()
+                        .replace('/', MAIN_SEPARATOR_STR)
+                } else {
+                    regex.replace_all(&p.as_path().display().to_string(), MAIN_SEPARATOR_STR).to_string()
+                };
+                PathBuf::from(os_compliant_path)
+            })
+            .collect();
+
+        self.fmy_source_files.extend(normalized_paths);
     }
 
     /// Sets a document information entry for the PDFComposer instance.
