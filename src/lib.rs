@@ -172,8 +172,8 @@ impl PDFComposer {
     /// // Set the output directory to "output/pdf"
     /// my_pdf_doc.set_output_directory("output/pdf");
     /// ```
-    pub fn set_output_directory(&mut self, output_directory: &str) {
-        self.output_directory = output_directory.into();
+    pub fn set_output_directory<T: OutputDirectory>(&mut self, output_directory: T) {
+        self.output_directory = output_directory.convert();
     }
 
     /// Sets the paper size for the PDF documents.
@@ -341,11 +341,11 @@ impl PDFComposer {
                 let is_windows = cfg!(target_os = "windows");
                 // Convert the path separator based on the platform
                 let os_compliant_path = if is_windows {
-                    p.display()
-                        .to_string()
-                        .replace('/', MAIN_SEPARATOR_STR)
+                    p.display().to_string().replace('/', MAIN_SEPARATOR_STR)
                 } else {
-                    regex.replace_all(&p.as_path().display().to_string(), MAIN_SEPARATOR_STR).to_string()
+                    regex
+                        .replace_all(&p.as_path().display().to_string(), MAIN_SEPARATOR_STR)
+                        .to_string()
                 };
                 PathBuf::from(os_compliant_path)
             })
@@ -533,5 +533,35 @@ impl Default for PDFComposer {
     fn default() -> Self {
         // Creates and returns a new instance of PDFComposer with default values.
         Self::new()
+    }
+}
+
+/// A trait representing an output directory.
+pub trait OutputDirectory {
+    /// Converts the reference to a path buffer.
+    fn convert(&self) -> std::path::PathBuf;
+}
+
+/// Implement the `OutputDirectory` trait for `&str`.
+impl OutputDirectory for &str {
+    /// Converts the reference to a path buffer.
+    ///
+    /// # Returns
+    ///
+    /// A `PathBuf` containing the converted path.
+    fn convert(&self) -> std::path::PathBuf {
+        std::path::PathBuf::from(self)
+    }
+}
+
+/// Implement the `OutputDirectory` trait for `&Path`.
+impl OutputDirectory for &std::path::Path {
+    /// Converts the reference to a path buffer.
+    ///
+    /// # Returns
+    ///
+    /// A `PathBuf` containing the converted path.
+    fn convert(&self) -> std::path::PathBuf {
+        std::path::PathBuf::from(self)
     }
 }
