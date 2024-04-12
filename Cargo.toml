@@ -1,15 +1,16 @@
 [package]
 name = "pdf_composer"
-version = "0.2.5"
+version = "0.2.6"
 authors = ["OrangeKiwi", "Richard Locke"]
 edition = "2021"
 rust-version = "1.77.1"
 description = "Create PDF documents from YAML Front Matter source documents"
+documentation = "https://docs.rs/crate/pdf_composer/"
 readme = "README.md"
 repository = "https://github.com/orangekiwi-io/pdf_composer"
 license = "MIT OR Apache-2.0"
 keywords = ["PDF", "YAML", "Markdown", "generate", "Composer"]
-categories = ["development-tools", "filesystem"]
+categories = ["development-tools", "filesystem", "text-processing"]
 resolver = "2"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
