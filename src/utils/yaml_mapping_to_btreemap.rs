@@ -1,14 +1,14 @@
 // Copyright © 2024 PDF Composer (pdf_composer). All rights reserved.
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-use serde_yaml::Value;
+use serde_yml::Value;
 use std::collections::BTreeMap;
 
 /// This function converts a YAML `Value::Mapping` into a `BTreeMap<String, Value>`. BTreeMaps are automatically alphabetically sorted.
 ///
 /// # Arguments
 ///
-/// * `yaml` - A reference to a `serde_yaml::Value` representing the YAML data to convert.
+/// * `yaml` - A reference to a `serde_yml::Value` representing the YAML data to convert.
 ///
 /// # Returns
 ///
@@ -30,21 +30,21 @@ use std::collections::BTreeMap;
 /// # Examples
 ///
 /// ```
-/// use serde_yaml::Value;
+/// use serde_yml::Value;
 /// use std::collections::BTreeMap;
 ///
 /// // Construct a YAML mapping
-/// let yaml_mapping = serde_yaml::Mapping::new();
-/// let mut yaml_value = serde_yaml::Value::Mapping(yaml_mapping);
+/// let yaml_mapping = serde_yml::Mapping::new();
+/// let mut yaml_value = serde_yml::Value::Mapping(yaml_mapping);
 ///
 /// // Add key-value pairs to the YAML mapping
 /// yaml_value.as_mapping_mut().unwrap().insert(
-///     serde_yaml::Value::String("key1".to_string()),
-///     serde_yaml::Value::String("value1".to_string())
+///     serde_yml::Value::String("key1".to_string()),
+///     serde_yml::Value::String("value1".to_string())
 /// );
 /// yaml_value.as_mapping_mut().unwrap().insert(
-///     serde_yaml::Value::String("key2".to_string()),
-///     serde_yaml::Value::String("value2".to_string())
+///     serde_yml::Value::String("key2".to_string()),
+///     serde_yml::Value::String("value2".to_string())
 /// );
 ///
 /// // Convert YAML mapping to a BTreeMap
@@ -53,8 +53,8 @@ use std::collections::BTreeMap;
 /// // Check if conversion was successful
 /// assert_eq!(btreemap, Some({
 ///     let mut map = BTreeMap::new();
-///     map.insert("key1".to_string(), serde_yaml::Value::String("value1".to_string()));
-///     map.insert("key2".to_string(), serde_yaml::Value::String("value2".to_string()));
+///     map.insert("key1".to_string(), serde_yml::Value::String("value1".to_string()));
+///     map.insert("key2".to_string(), serde_yml::Value::String("value2".to_string()));
 ///     map
 /// }));
 /// ```

@@ -3,7 +3,7 @@
 
 use colored::Colorize;
 use lopdf::{Document, Object as LopdfObject, StringFormat};
-use serde_yaml::Value;
+use serde_yml::Value;
 use std::collections::BTreeMap;
 use std::fs::{create_dir_all, OpenOptions};
 use std::io;

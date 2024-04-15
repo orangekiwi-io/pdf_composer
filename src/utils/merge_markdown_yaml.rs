@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
 use regex::Regex;
-use serde_yaml::Value;
+use serde_yml::Value;
 use std::collections::BTreeMap;
 
 /// This function merges the YAML data from a `BTreeMap<String, Value>` into a given Markdown content string.
@@ -32,12 +32,12 @@ use std::collections::BTreeMap;
 ///
 /// ```
 /// use std::collections::BTreeMap;
-/// use serde_yaml::Value;
+/// use serde_yml::Value;
 ///
 /// // Define YAML data as a BTreeMap
 /// let mut yaml_data = BTreeMap::new();
-/// yaml_data.insert("name".to_string(), serde_yaml::Value::String("Richard".to_string()));
-/// yaml_data.insert("age".to_string(), serde_yaml::Value::String("23".to_string()));
+/// yaml_data.insert("name".to_string(), serde_yml::Value::String("Richard".to_string()));
+/// yaml_data.insert("age".to_string(), serde_yml::Value::String("23".to_string()));
 ///
 /// // Define Markdown content with placeholders
 /// let markdown_content = "Name: {{name}}\nAge: {{age}}";
