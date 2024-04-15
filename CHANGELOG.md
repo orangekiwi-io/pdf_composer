@@ -1,5 +1,8 @@
 # Changelog
 
+## `0.2.61`
+
+* Update the 'Producer' PDF property to "PDF Composer"
 ## `0.2.6`
 
 * Bug fix for Path and PathBuf error with path.join.
