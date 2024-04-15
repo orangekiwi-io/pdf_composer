@@ -12,7 +12,7 @@
 use colored::Colorize;
 use rayon::prelude::*;
 use regex::Regex;
-use serde_yaml::Value;
+use serde_yml::Value;
 use std::{
     collections::BTreeMap,
     fmt, fs,
@@ -476,7 +476,7 @@ impl PDFComposer {
                     }
 
                     // Parse YAML content.
-                    let yaml: Value = serde_yaml::from_str(&rayon_yaml_content).unwrap();
+                    let yaml: Value = serde_yml::from_str(&rayon_yaml_content).unwrap();
                     // Check if YAML is valid.
                     // If file exists, but is not a suitable yaml markdown file, early exit break
                     if rayon_yaml_delimiter_count == 0 || yaml == Value::Null {
