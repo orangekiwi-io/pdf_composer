@@ -20,6 +20,9 @@ use futures::StreamExt;
 
 use super::page_properties::PageMargins;
 
+// Const for friendly Package name
+const PACKAGE_NAME: &str = "PDF Composer";
+
 /// This function generates a PDF document from a given HTML string, source file and YAML data.
 /// It also all updated dictionary entries, PDF version, paper size, paper orientation sets margins and the font before writing PDFs to the output directory.
 ///
@@ -201,10 +204,10 @@ pub fn build_pdf(
                         // Check if the key is "Creator"
                         if ascii_key == "Creator" {
                             // Update the value associated with the key
-                            let default_creator = "PDFComposer".to_string();
+                            let default_creator = &PACKAGE_NAME.to_string();
                             let ascii_string = string_values_btreemap
                                 .get("generator")
-                                .unwrap_or(&default_creator);
+                                .unwrap_or(default_creator);
                             let ascii_bytes: Vec<u8> = ascii_string.as_bytes().to_vec();
                             *value = lopdf::Object::String(ascii_bytes, StringFormat::Literal);
                             // Set creator_found to true
@@ -212,7 +215,7 @@ pub fn build_pdf(
                         }
                         if ascii_key == "Producer" {
                             // Update the value associated with the key
-                            let ascii_string = "OrangeKiwi using Chromiumoxide and lopdf";
+                            let ascii_string = PACKAGE_NAME;
                             let ascii_bytes: Vec<u8> = ascii_string.as_bytes().to_vec();
                             *value = lopdf::Object::String(ascii_bytes, StringFormat::Literal);
                         }
