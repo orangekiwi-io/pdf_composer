@@ -1,5 +1,9 @@
 # Changelog
 
+
+## `0.2.71`
+* Updated `serde_yml` crate to version `0.0.5`
+
 ## `0.2.70`
 
 * Migrated to the `serde_yml` crate from `serde_yaml` (serde_yaml v0.9.34+deprecated)

@@ -1,6 +1,6 @@
 [package]
 name = "pdf_composer"
-version = "0.2.70"
+version = "0.2.71"
 authors = ["OrangeKiwi", "Richard Locke"]
 edition = "2021"
 rust-version = "1.77.1"
@@ -26,5 +26,5 @@ markdown = "1.0.0-alpha.16"
 rayon = "1.10.0"
 regex = "1.10.3"
 serde = { version = "1.0.197", features = ["derive"] }
-serde_yml = "0.0.4"
+serde_yml = "0.0.5"
 url-escape = "0.1.1"
