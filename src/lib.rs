@@ -86,12 +86,12 @@ pub enum PDFVersion {
     V2_0,
 }
 
-impl ToString for PDFVersion {
-    /// Implements the ToString trait for PDFVersion, converting enum variants to their corresponding String representations.
-    fn to_string(&self) -> String {
+/// Implements fmt:Display trait (warning in rust 1.78.1) for PDFVersion, converting enum variants to their corresponding String representations.
+impl fmt::Display for PDFVersion {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
         match self {
-            PDFVersion::V1_7 => String::from("1.7"),
-            PDFVersion::V2_0 => String::from("2.0"),
+            PDFVersion::V1_7 => write!(f, "1.7"),
+            PDFVersion::V2_0 => write!(f, "2.0"),
         }
     }
 }
