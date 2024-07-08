@@ -86,7 +86,7 @@ pub enum PDFVersion {
     V2_0,
 }
 
-/// Implements fmt:Display trait (warning in rust 1.78.1) for PDFVersion, converting enum variants to their corresponding String representations.
+/// Implements fmt:Display trait (warning in rust 1.78.0) for PDFVersion, converting enum variants to their corresponding String representations.
 impl fmt::Display for PDFVersion {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
         match self {
