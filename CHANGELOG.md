@@ -1,6 +1,10 @@
 # Changelog
 
 
+## `0.3.0`
+* Refactored into workspaces for laying the foundation for `features`
+* Various dependencies version bumps
+
 ## `0.2.71`
 * Updated `serde_yml` crate to version `0.0.5`
 
