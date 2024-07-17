@@ -104,10 +104,13 @@ type PageUnit = f64;
 pub type PageMargins = [PageUnit; 4];
 
 /// Trait to extract the width and height of the paper size from the `PaperSize` chosen
-pub(crate) trait ToDimensions {
+pub trait ToDimensions {
+    /// Method to convert a paper size enum name to
+    /// real dimensions (width and height) in inches
     fn to_dimensions(&self) -> (PageUnit, PageUnit);
 }
 
+/// Struct for the page dimension: width and height
 #[derive(Clone, Debug)]
 pub struct PaperDimension {
     width: PageUnit,

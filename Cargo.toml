@@ -1,30 +1,39 @@
 [package]
 name = "pdf_composer"
-version = "0.2.71"
-authors = ["OrangeKiwi", "Richard Locke"]
+version = "0.3.0"
 edition = "2021"
-rust-version = "1.77.1"
+
+[workspace.package]
+authors = ["OrangeKiwi", "Richard Locke"]
+categories = ["development-tools", "filesystem", "text-processing"]
 description = "Create PDF documents from YAML Front Matter source documents"
 documentation = "https://docs.rs/crate/pdf_composer/"
+edition = "2021"
+keywords = ["PDF", "YAML", "Markdown", "generate", "Composer"]
+license = "MIT OR Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/orangekiwi-io/pdf_composer"
-license = "MIT OR Apache-2.0"
-keywords = ["PDF", "YAML", "Markdown", "generate", "Composer"]
-categories = ["development-tools", "filesystem", "text-processing"]
-resolver = "2"
+rust-version = "1.77.1"
+version = "0.3.0"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+# unused = "allow" # For experimental dev
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-async-std = "1.12.0"
-chromiumoxide = "0.6.0"
-colored = "2.1.0"
-dotenvy = "0.15.7"
-futures = "0.3.30"
-lopdf = "0.32.0"
-markdown = "1.0.0-alpha.18"
-rayon = "1.10.0"
-regex = "1.10.3"
-serde = { version = "1.0.197", features = ["derive"] }
-serde_yml = "0.0.10"
-url-escape = "0.1.1"
+definitions = { path = "./definitions" }
+base = { path = "./base" }
+
+[workspace]
+resolver = "2"
+members = ["definitions", "base"]
+# default-members = [
+#   "definitions",
+#   # "base"
+# ]
+
+[features]
+defs = []
+base = ["defs"]
