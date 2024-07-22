@@ -12,10 +12,12 @@ use std::path::{Path, PathBuf};
 use crate::utils::extract_to_end_string;
 use async_std::task;
 use chromiumoxide::{cdp::browser_protocol::page::PrintToPdfParams, Browser, BrowserConfig};
-use definitions::consts::{CHECK_MARK, CROSS_MARK, PACKAGE_NAME};
-use definitions::fonts::{FontsStandard, GetCssName};
-use definitions::page_properties::{PageMargins, PaperOrientation, PaperSize, ToDimensions};
-use definitions::pdf_version::PDFVersion;
+use pdf_composer_definitions::consts::{CHECK_MARK, CROSS_MARK, PACKAGE_NAME};
+use pdf_composer_definitions::fonts::{FontsStandard, GetCssName};
+use pdf_composer_definitions::page_properties::{
+    PageMargins, PaperOrientation, PaperSize, ToDimensions,
+};
+use pdf_composer_definitions::pdf_version::PDFVersion;
 
 use futures::StreamExt;
 

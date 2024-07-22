@@ -1,0 +1,31 @@
+[package]
+description = "PDF Composer base functionality crate"
+
+authors.workspace = true
+categories.workspace = true
+documentation.workspace = true
+edition.workspace = true
+keywords.workspace = true
+license.workspace = true
+name = "pdf_composer_base"
+readme.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[dependencies]
+pdf_composer_definitions = { path = "../pdf_composer_definitions", version = "0.3.0" }
+
+async-std = "1.12.0"
+chromiumoxide = "0.6.0"
+colored = "2.1.0"
+futures = "0.3.30"
+lopdf = "0.32"
+regex = "1.10.5"
+serde_yml = "0.0.10"
+url-escape = "0.1.1"
+rayon = "1.10.0"
+markdown = "1.0.0-alpha.18"
+
+[lints]
+workspace = true

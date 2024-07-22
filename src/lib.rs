@@ -9,10 +9,10 @@
 #![crate_name = "pdf_composer"]
 #![crate_type = "lib"]
 
-pub use base::PDFComposer;
-pub use definitions::consts::PACKAGE_NAME;
-pub use definitions::fonts::FontsStandard;
-pub use definitions::page_properties::{PageMargins, PaperOrientation, PaperSize};
-pub use definitions::pdf_composer::PDFComposerStruct;
-pub use definitions::pdf_doc_entry::PDFDocInfoEntry;
-pub use definitions::pdf_version::PDFVersion;
+pub use pdf_composer_base::PDFComposer;
+pub use pdf_composer_definitions::consts::PACKAGE_NAME;
+pub use pdf_composer_definitions::fonts::FontsStandard;
+pub use pdf_composer_definitions::page_properties::{PageMargins, PaperOrientation, PaperSize};
+pub use pdf_composer_definitions::pdf_composer::PDFComposerStruct;
+pub use pdf_composer_definitions::pdf_doc_entry::PDFDocInfoEntry;
+pub use pdf_composer_definitions::pdf_version::PDFVersion;
