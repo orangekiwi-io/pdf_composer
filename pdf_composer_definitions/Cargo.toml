@@ -1,7 +1,8 @@
 [package]
+description = "PDF Composer definitions crate"
+
 authors.workspace = true
 categories.workspace = true
-description.workspace = true
 documentation.workspace = true
 edition.workspace = true
 keywords.workspace = true

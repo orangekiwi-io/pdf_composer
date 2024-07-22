@@ -2,11 +2,14 @@
 name = "pdf_composer"
 version = "0.3.0"
 edition = "2021"
+description = "Create PDF documents from YAML Front Matter source documents"
+documentation = "https://docs.rs/crate/pdf_composer/"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/orangekiwi-io/pdf_composer"
 
 [workspace.package]
 authors = ["OrangeKiwi", "Richard Locke"]
 categories = ["development-tools", "filesystem", "text-processing"]
-description = "Create PDF documents from YAML Front Matter source documents"
 documentation = "https://docs.rs/crate/pdf_composer/"
 edition = "2021"
 keywords = ["PDF", "YAML", "Markdown", "generate", "Composer"]
@@ -23,8 +26,8 @@ unsafe_code = "forbid"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-pdf_composer_definitions = { path = "./pdf_composer_definitions" }
-pdf_composer_base = { path = "./pdf_composer_base" }
+pdf_composer_definitions = { path = "./pdf_composer_definitions", version = "0.3.0" }
+pdf_composer_base = { path = "./pdf_composer_base", version = "0.3.0" }
 
 [workspace]
 resolver = "2"
