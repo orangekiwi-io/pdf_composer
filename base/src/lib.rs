@@ -18,6 +18,7 @@ use regex::Regex;
 use serde_yml::Value;
 use std::collections::BTreeMap;
 use std::fs;
+use std::option::Option;
 use std::path::{PathBuf, MAIN_SEPARATOR_STR};
 use std::process;
 
@@ -456,18 +457,16 @@ impl PDFComposer for PDFComposerStruct {
                         font: self.font,
                     };
 
-                    // TODO RL Bug for when there are no pdf_document_entries
-                    // Github issue: https://github.com/orangekiwi-io/pdf_composer/issues/58
-                    // Build the PDF document.
-                    let _ = build_pdf(
-                        html,
-                        yaml_btreemap,
-                        <std::option::Option<
-                            std::collections::BTreeMap<std::string::String, std::string::String>,
-                        > as Clone>::clone(&self.pdf_document_entries)
+                    let dictionary_entries = match &self.pdf_document_entries {
+                        None => BTreeMap::new(),
+                        _ => <Option<BTreeMap<String, String>> as Clone>::clone(
+                            &self.pdf_document_entries,
+                        )
                         .unwrap(),
-                        instance_data,
-                    );
+                    };
+
+                    // Build the PDF document.
+                    let _ = build_pdf(html, yaml_btreemap, dictionary_entries, instance_data);
                 }
                 Err(_) => {
                     // File not found, print error message.
