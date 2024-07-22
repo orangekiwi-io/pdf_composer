@@ -23,19 +23,18 @@ unsafe_code = "forbid"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-definitions = { path = "./definitions" }
-base = { path = "./base" }
+pdf_composer_definitions = { path = "./pdf_composer_definitions" }
+pdf_composer_base = { path = "./pdf_composer_base" }
 
 [workspace]
 resolver = "2"
-members = ["definitions", "base"]
-default-members = ["definitions", "base"]
+members = ["pdf_composer_definitions", "pdf_composer_base"]
+default-members = ["pdf_composer_definitions", "pdf_composer_base"]
 
 [features]
-# default = ["base"]
+default = ["base"]
 defs = []
 base = ["defs"]
 
-# [[example]]
-# name = "basic"
-# crate-type = ["bin"]
+[[example]]
+name = "basic"

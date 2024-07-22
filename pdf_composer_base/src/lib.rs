@@ -22,7 +22,7 @@ use std::option::Option;
 use std::path::{PathBuf, MAIN_SEPARATOR_STR};
 use std::process;
 
-use definitions::{
+use pdf_composer_definitions::{
     consts::{CROSS_MARK, DEFAULT_MARGIN, DEFAULT_OUTPUT_DIRECTORY, MM_TO_INCH},
     fonts::FontsStandard,
     output_directory::OutputDirectory,

@@ -6,14 +6,14 @@ documentation.workspace = true
 edition.workspace = true
 keywords.workspace = true
 license.workspace = true
-name = "base"
+name = "pdf_composer_base"
 readme.workspace = true
 repository.workspace = true
 rust-version.workspace = true
 version.workspace = true
 
 [dependencies]
-definitions = { path = "../definitions" }
+pdf_composer_definitions = { path = "../pdf_composer_definitions" }
 
 async-std = "1.12.0"
 chromiumoxide = "0.6.0"
