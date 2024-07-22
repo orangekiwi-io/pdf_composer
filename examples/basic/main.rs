@@ -5,6 +5,8 @@
 //!
 //! This file is an example usage of the PDF Composer crate.
 //!
+//! `cargo run --example basic -p pdf_composer`
+//!
 use pdf_composer::{
     FontsStandard, PDFComposer, PDFComposerStruct, PDFDocInfoEntry, PDFVersion, PaperOrientation,
     PaperSize,
