@@ -29,11 +29,13 @@ base = { path = "./base" }
 [workspace]
 resolver = "2"
 members = ["definitions", "base"]
-# default-members = [
-#   "definitions",
-#   # "base"
-# ]
+default-members = ["definitions", "base"]
 
 [features]
+# default = ["base"]
 defs = []
 base = ["defs"]
+
+# [[example]]
+# name = "basic"
+# crate-type = ["bin"]
