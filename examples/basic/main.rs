@@ -5,8 +5,11 @@
 //!
 //! This file is an example usage of the PDF Composer crate.
 //!
+//! `cargo run --example basic -p pdf_composer`
+//!
 use pdf_composer::{
-    FontsStandard, PDFComposer, PDFDocInfoEntry, PDFVersion, PaperOrientation, PaperSize,
+    FontsStandard, PDFComposer, PDFComposerStruct, PDFDocInfoEntry, PDFVersion, PaperOrientation,
+    PaperSize,
 };
 use std::path::PathBuf;
 
@@ -14,7 +17,7 @@ fn main() {
     println!("Basic example");
 
     // Create a new PDFComposer instance
-    let mut bob = PDFComposer::new();
+    let mut bob: PDFComposerStruct = PDFComposer::new();
 
     // Add some paths. Relative paths
     let paths = vec![

@@ -9,19 +9,15 @@ use std::fs::{create_dir_all, OpenOptions};
 use std::io;
 use std::path::{Path, PathBuf};
 
-use crate::core::fonts::GetCssName;
-use crate::core::page_properties::ToDimensions;
-use crate::core::PaperOrientation;
 use crate::utils::extract_to_end_string;
-use crate::{FontsStandard, PDFVersion, PaperSize, CHECK_MARK, CROSS_MARK};
 use async_std::task;
 use chromiumoxide::{cdp::browser_protocol::page::PrintToPdfParams, Browser, BrowserConfig};
+use definitions::consts::{CHECK_MARK, CROSS_MARK, PACKAGE_NAME};
+use definitions::fonts::{FontsStandard, GetCssName};
+use definitions::page_properties::{PageMargins, PaperOrientation, PaperSize, ToDimensions};
+use definitions::pdf_version::PDFVersion;
+
 use futures::StreamExt;
-
-use super::page_properties::PageMargins;
-
-// Const for friendly Package name
-const PACKAGE_NAME: &str = "PDF Composer";
 
 /// This function generates a PDF document from a given HTML string, source file and YAML data.
 /// It also all updated dictionary entries, PDF version, paper size, paper orientation sets margins and the font before writing PDFs to the output directory.
@@ -290,6 +286,7 @@ pub fn build_pdf(
 }
 
 /// PDFBuilder Struct for passing data into the build_pdf function
+#[derive(Debug)]
 pub struct PDFBuilder {
     /// `source_file` - A `String` representing the path to the source file (e.g., Markdown file) from which the HTML was generated.
     pub source_file: String,

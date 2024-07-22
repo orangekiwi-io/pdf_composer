@@ -1,6 +1,11 @@
 # Changelog
 
 
+## `0.3.0`
+* Various dependencies version bumps
+* Refactored into workspaces for laying the foundation for `features`
+* Fixed bug for when no document info entries were set
+
 ## `0.2.71`
 * Updated `serde_yml` crate to version `0.0.5`
 

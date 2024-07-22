@@ -32,7 +32,9 @@ pub enum FontsStandard {
 }
 
 /// Trait to return the CSS name of the standard font passed in
-pub(crate) trait GetCssName {
+pub trait GetCssName {
+    /// Method to get (return) the CSS name, weight and style
+    /// from a font name in the FontsStandard enum
     fn get_css_name(&self) -> (String, String, String);
 }
 

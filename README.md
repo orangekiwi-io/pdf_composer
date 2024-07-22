@@ -216,7 +216,7 @@ The result will be: `The author of this document is {{name}}.`
 
 ## Example usage
 
-Assuming you have Rust up and running (tested with rust verion `1.76+`) and you have run `cargo add pdf_composer` to install the **PDF Composer** crate, then you can begin.
+Assuming you have Rust up and running (tested with rust verion `1.77+`) and you have run `cargo add pdf_composer` to install the **PDF Composer** crate, then you can begin.
 
 ```rust
 use pdf_composer::{FontsStandard, PaperOrientation, PaperSize, PDFComposer, PDFDocInfoEntry, PDFVersion};
